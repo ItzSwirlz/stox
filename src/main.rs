@@ -1,12 +1,13 @@
-use serde_json::Value;
+use chrono::prelude::*;
 
 use gtk4::prelude::*;
 use gtk4::{Application, ApplicationWindow, Label};
 
+use yahoo_finance_api as yahoo;
+
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
 fn main() {
-    quote();
     // Create a new application
     let app = Application::builder().application_id(APP_ID).build();
 
@@ -19,8 +20,14 @@ fn main() {
 
 fn build_ui(app: &Application) {
     let b = gtk4::Box::new(gtk4::Orientation::Vertical, 12);
-    let q = quote().unwrap();
-    let label = Label::new(Some(format!("Apple: {}", q.as_str()).as_str()));
+
+    let provider = yahoo::YahooConnector::new();
+    let response = provider.get_latest_quotes("AAPL", "1d").unwrap();
+    let q = response.last_quote().unwrap();
+    let xaxises = response.quotes().unwrap();
+
+    let time = Utc.timestamp_opt(xaxises[0].timestamp as i64, 0).unwrap();
+    let label = Label::new(Some(format!("Apple: {} at {}", q.adjclose, time.to_rfc2822()).as_str()));
     label.show();
 
     b.append(&label);
@@ -35,16 +42,4 @@ fn build_ui(app: &Application) {
         .build();
 
     window.present();
-}
-
-#[tokio::main]
-async fn quote() -> Result<String, Box<dyn std::error::Error>> {
-    let resp = reqwest::get("https://query1.finance.yahoo.com/v11/finance/quoteSummary/AAPL?modules=financialData")
-        .await?
-        .text()
-        .await?;
-    let v: Value = serde_json::from_str(resp.as_str())?;
-
-    println!("{:#?}", v["quoteSummary"]["result"][0]["financialData"]["currentPrice"]["raw"]);
-    Ok(v["quoteSummary"]["result"][0]["financialData"]["currentPrice"]["raw"].to_string())
 }
