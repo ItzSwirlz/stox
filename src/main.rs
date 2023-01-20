@@ -1,3 +1,6 @@
+mod axes;
+
+use axes::x_axis;
 use chrono::prelude::*;
 
 use gtk4::prelude::*;
@@ -22,15 +25,14 @@ fn build_ui(app: &Application) {
     let b = gtk4::Box::new(gtk4::Orientation::Vertical, 12);
 
     let provider = yahoo::YahooConnector::new();
-    let response = provider.get_latest_quotes("AAPL", "1d").unwrap();
-    let q = response.last_quote().unwrap();
-    let xaxises = response.quotes().unwrap();
+    let response = provider.get_quote_range("AAPL", "60m", "1d").unwrap();
 
-    let time = Utc.timestamp_opt(xaxises[0].timestamp as i64, 0).unwrap();
-    let label = Label::new(Some(format!("Apple: {} at {}", q.adjclose, time.to_rfc2822()).as_str()));
-    label.show();
+    let x_axis = x_axis(response);
+    let x_axis: String = x_axis.into_iter().collect();
 
+    let label = Label::new(Some(&x_axis));
     b.append(&label);
+
     b.show();
 
     let window = ApplicationWindow::builder()
