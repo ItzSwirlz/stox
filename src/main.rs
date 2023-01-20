@@ -3,7 +3,7 @@ mod axes;
 use axes::x_axis;
 use chrono::prelude::*;
 
-use gtk4::prelude::*;
+use gtk4::{prelude::*, Builder};
 use gtk4::{Application, ApplicationWindow, Label};
 
 use yahoo_finance_api as yahoo;
@@ -35,13 +35,9 @@ fn build_ui(app: &Application) {
 
     b.show();
 
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .child(&b)
-        .title("Stox")
-        .width_request(200)
-        .height_request(200)
-        .build();
+    let builder = Builder::from_file("src/main.ui");
+    let window = builder.object::<ApplicationWindow>("window").unwrap();
 
+    window.set_application(Some(app));
     window.present();
 }
