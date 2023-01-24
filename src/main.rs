@@ -1,12 +1,9 @@
+mod symbolbox;
 mod axes;
 
-use axes::x_axis;
-use chrono::prelude::*;
-
-use gtk4::{prelude::*, Builder};
-use gtk4::{Application, ApplicationWindow, Label};
-
-use yahoo_finance_api as yahoo;
+use gtk4::prelude::*;
+use gtk4::*;
+use symbolbox::StoxSidebar;
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
@@ -22,21 +19,62 @@ fn main() {
 }
 
 fn build_ui(app: &Application) {
-    let b = gtk4::Box::new(gtk4::Orientation::Vertical, 12);
+    let b = Box::new(Orientation::Vertical, 10);
+    let searchbar = SearchEntry::builder()
+        .focusable(true)
+        .placeholder_text("Search for a symbol (i.e. AAPL)")
+        .build();
 
-    let provider = yahoo::YahooConnector::new();
-    let response = provider.get_quote_range("AAPL", "60m", "1d").unwrap();
+    searchbar.show();
 
-    let x_axis = x_axis(response);
-    let x_axis: String = x_axis.into_iter().collect();
+    let searchbar_row = ListBoxRow::builder()
+        .height_request(50)
+        .focusable(true)
+        .margin_start(10)
+        .margin_end(10)
+        .margin_top(10)
+        .margin_bottom(10)
+        .child(&searchbar)
+        .build();
 
-    let label = Label::new(Some(&x_axis));
-    b.append(&label);
+    let aapl = StoxSidebar::create("AAPL");
+    aapl.0.show();
+    StoxSidebar::start_ticking(aapl.1.to_string(), aapl.2);
+    
+    let msft = StoxSidebar::create("MSFT");
+    msft.0.show();
+    StoxSidebar::start_ticking(msft.1.to_string(), msft.2);
 
-    b.show();
+    let sidebar = ListBox::new();
+    sidebar.set_height_request(800);
+    sidebar.append(&searchbar_row);
+    sidebar.append(&aapl.0);
+    sidebar.append(&msft.0);
+    
+    let viewport = Viewport::builder()
+        .child(&sidebar)
+        .height_request(500)
+        .build();
 
-    let builder = Builder::from_file("src/main.ui");
-    let window = builder.object::<ApplicationWindow>("window").unwrap();
+    viewport.show();
+ 
+    let scroll_window = ScrolledWindow::builder()
+        .child(&viewport)
+        .halign(Align::Center)
+        .focusable(true)
+        .min_content_width(300)
+        .max_content_width(300)
+        .min_content_height(800)
+        .build();
+
+    b.append(&scroll_window);
+
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .child(&b)
+        .title("Stox")
+        .default_height(800)
+        .build();
 
     window.set_application(Some(app));
     window.present();
