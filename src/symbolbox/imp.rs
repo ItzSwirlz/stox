@@ -7,7 +7,7 @@ pub struct ListBoxRow {}
 #[glib::object_subclass]
 impl ObjectSubclass for ListBoxRow {
     const NAME: &'static str = "SymbolBox";
-    type Type = super::StoxSidebar;
+    type Type = super::StoxSidebarItem;
     type ParentType = gtk4::ListBoxRow;
 }
 

@@ -3,7 +3,7 @@ mod axes;
 
 use gtk4::prelude::*;
 use gtk4::*;
-use symbolbox::StoxSidebar;
+use symbolbox::StoxSidebarItem;
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
@@ -37,20 +37,22 @@ fn build_ui(app: &Application) {
         .child(&searchbar)
         .build();
 
-    let aapl = StoxSidebar::create("AAPL");
+    let dow = StoxSidebarItem::new("^DJI");
+    dow.0.show();
+
+    let aapl = StoxSidebarItem::new("AAPL");
     aapl.0.show();
-    StoxSidebar::start_ticking(aapl.1.to_string(), aapl.2);
     
-    let msft = StoxSidebar::create("MSFT");
+    let msft = StoxSidebarItem::new("MSFT");
     msft.0.show();
-    StoxSidebar::start_ticking(msft.1.to_string(), msft.2);
 
     let sidebar = ListBox::new();
     sidebar.set_height_request(800);
     sidebar.append(&searchbar_row);
+    sidebar.append(&dow.0);
     sidebar.append(&aapl.0);
     sidebar.append(&msft.0);
-    
+
     let viewport = Viewport::builder()
         .child(&sidebar)
         .height_request(500)
@@ -78,4 +80,8 @@ fn build_ui(app: &Application) {
 
     window.set_application(Some(app));
     window.present();
+
+    StoxSidebarItem::start_ticking(aapl.1.to_string(), aapl.2, aapl.3);
+    StoxSidebarItem::start_ticking(msft.1.to_string(), msft.2, msft.3);
+    StoxSidebarItem::start_ticking(dow.1.to_string(), dow.2, dow.3);
 }

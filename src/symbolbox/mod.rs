@@ -7,13 +7,13 @@ use gtk4::glib::*;
 use yahoo_finance_api as yahoo;
 
 glib::wrapper! {
-    pub struct StoxSidebar(ObjectSubclass<imp::ListBoxRow>)
+    pub struct StoxSidebarItem(ObjectSubclass<imp::ListBoxRow>)
         @extends ListBoxRow, Widget,
         @implements Actionable, Accessible, Buildable, ConstraintTarget;
 }
 
-impl StoxSidebar {
-    pub fn create(symbol: &str) -> (ListBoxRow, &str, Label) {
+impl StoxSidebarItem {
+    pub fn new(symbol: &str) -> (ListBoxRow, &str, Label, Label) {
         let quote_label = Label::builder()
                 .halign(Align::End)
                 .justify(Justification::Right)
@@ -40,7 +40,11 @@ impl StoxSidebar {
                 .label(&symbol)
                 .visible(true)
                 .build();
-                
+
+        if symbol == "^DJI" {
+            symbol_label.set_text("Dow Jones");  // nobody thinks of it as "^DJI"
+        }
+
         symbol_label.show();
 
         let grid = Grid::builder()
@@ -67,20 +71,22 @@ impl StoxSidebar {
         c.set_child(Some(&grid));
         c.show();
         
-        return (c, symbol, quote_label);
+        return (c, symbol, desc, quote_label);
         
     }
     
-    pub fn start_ticking(symbol: String, label: Label) {
+    pub fn start_ticking(symbol: String, desc_label: Label, quote_label: Label) {
         // This practically creates another loop to monitor quote updates.
         let main_context = MainContext::default();
 
         // Don't pause the main loop to wait for our information
-        main_context.spawn_local(clone!(@weak label => async move {
+        main_context.spawn_local(clone!(@weak quote_label => async move {
             let provider = yahoo::YahooConnector::new();
-            let response = provider.get_latest_quotes(symbol.as_str(), "1h").unwrap().last_quote().unwrap().close;
-            let response = format!("{:.2}", response);  // limit to two decimal places
-            label.set_text(response.to_string().as_str());
+            let latest_quote = provider.get_latest_quotes(symbol.as_str(), "1h").unwrap().last_quote().unwrap().close;
+            let latest_quote = format!("{:.2}", latest_quote);  // limit to two decimal places
+
+            quote_label.set_text(latest_quote.to_string().as_str());
+            desc_label.set_text(provider.search_ticker(&symbol).unwrap().quotes[0].short_name.as_str());
         }));
     }
 }
