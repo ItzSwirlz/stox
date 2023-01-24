@@ -22,7 +22,7 @@ fn build_ui(app: &Application) {
     let b = Box::new(Orientation::Vertical, 10);
     let searchbar = SearchEntry::builder()
         .focusable(true)
-        .placeholder_text("Search for a symbol (i.e. AAPL)")
+        .placeholder_text("Search for a symbol...")
         .build();
 
     searchbar.show();
