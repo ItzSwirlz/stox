@@ -2,7 +2,18 @@ use chrono::prelude::*;
 use yahoo_finance_api as yahoo;
 use yahoo::YResponse;
 
-pub fn x_axis(response: YResponse) -> Vec<String> {
+pub fn stox_get_main_info(symbol: String) -> (String, String) {
+    let provider = yahoo::YahooConnector::new();
+
+    let latest_quote = provider.get_latest_quotes(symbol.as_str(), "1h").unwrap().last_quote().unwrap().close;
+    let latest_quote = format!("{:.2}", latest_quote);  // limit to two decimal places
+
+    let name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name.to_string();
+
+    return (name, latest_quote)
+}
+
+pub fn stox_get_chart_x_axis(response: YResponse) -> Vec<String> {
     let mut axis: Vec<String> = vec![];
     for index in response.chart.result.into_iter() {
         let range = index.meta.range;  // (1d, 60m, etc.) indicators

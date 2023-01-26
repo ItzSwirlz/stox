@@ -1,6 +1,8 @@
+mod datagrid;
 mod symbolbox;
-mod axes;
+mod data_helper;
 
+use datagrid::StoxDataGrid;
 use gtk4::prelude::*;
 use gtk4::*;
 use symbolbox::StoxSidebarItem;
@@ -19,7 +21,7 @@ fn main() {
 }
 
 fn build_ui(app: &Application) {
-    let b = Box::new(Orientation::Vertical, 10);
+    let b = Box::new(Orientation::Horizontal, 10);
     let searchbar = SearchEntry::builder()
         .focusable(true)
         .placeholder_text("Search for a symbol...")
@@ -70,6 +72,11 @@ fn build_ui(app: &Application) {
         .build();
 
     b.append(&scroll_window);
+    
+    let datagrid = StoxDataGrid::new("AAPL");
+    datagrid.show();
+    
+    b.append(&datagrid);
 
     let window = ApplicationWindow::builder()
         .application(app)
