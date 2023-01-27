@@ -1,5 +1,5 @@
-use gtk4::subclass::prelude::*;
 use gtk4::glib::subclass::types::ObjectSubclass;
+use gtk4::subclass::prelude::*;
 
 #[derive(Default)]
 pub struct ListBoxRow {}

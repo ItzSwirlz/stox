@@ -1,6 +1,6 @@
+mod data_helper;
 mod datagrid;
 mod symbolbox;
-mod data_helper;
 
 use datagrid::StoxDataGrid;
 use gtk4::prelude::*;
@@ -39,21 +39,16 @@ fn build_ui(app: &Application) {
         .child(&searchbar)
         .build();
 
-    let dow = StoxSidebarItem::new("^DJI");
-    dow.0.show();
-
-    let aapl = StoxSidebarItem::new("AAPL");
-    aapl.0.show();
-    
-    let msft = StoxSidebarItem::new("MSFT");
-    msft.0.show();
-
     let sidebar = ListBox::new();
     sidebar.set_height_request(800);
     sidebar.append(&searchbar_row);
-    sidebar.append(&dow.0);
-    sidebar.append(&aapl.0);
-    sidebar.append(&msft.0);
+
+    let tickers = ["^DJI", "AAPL", "MSFT"];
+    for ticker in tickers {
+        let sidebar_item = StoxSidebarItem::new(ticker);
+        sidebar.append(&sidebar_item.0);
+        StoxSidebarItem::start_ticking(sidebar_item.1.to_string(), sidebar_item.2, sidebar_item.3);
+    }
 
     let viewport = Viewport::builder()
         .child(&sidebar)
@@ -61,21 +56,21 @@ fn build_ui(app: &Application) {
         .build();
 
     viewport.show();
- 
+
     let scroll_window = ScrolledWindow::builder()
         .child(&viewport)
         .halign(Align::Center)
         .focusable(true)
-        .min_content_width(300)
-        .max_content_width(300)
+        .min_content_width(325)
+        .max_content_width(325)
         .min_content_height(800)
         .build();
 
     b.append(&scroll_window);
-    
+
     let datagrid = StoxDataGrid::new("AAPL");
     datagrid.show();
-    
+
     b.append(&datagrid);
 
     let window = ApplicationWindow::builder()
@@ -85,10 +80,11 @@ fn build_ui(app: &Application) {
         .default_height(800)
         .build();
 
+    let header_bar = HeaderBar::new();
+    header_bar.set_title_widget(Some(&Label::new(Some("Stox"))));
+    header_bar.set_show_title_buttons(true);
+
+    window.set_titlebar(Some(&header_bar));
     window.set_application(Some(app));
     window.present();
-
-    StoxSidebarItem::start_ticking(aapl.1.to_string(), aapl.2, aapl.3);
-    StoxSidebarItem::start_ticking(msft.1.to_string(), msft.2, msft.3);
-    StoxSidebarItem::start_ticking(dow.1.to_string(), dow.2, dow.3);
 }

@@ -1,7 +1,7 @@
 mod imp;
 
-use gtk4::*;
 use gtk4::traits::*;
+use gtk4::*;
 
 use crate::data_helper::{stox_get_main_info, stox_get_ranges};
 
@@ -20,11 +20,11 @@ impl StoxDataGrid {
             .build();
 
         symbol_label.show();
-        
+
         let info = stox_get_main_info(symbol.to_string());
         let name = Label::new(Some(info.0.as_str()));
         name.show();
-        
+
         let latest_quote = Label::new(Some(info.1.as_str()));
         latest_quote.set_halign(Align::End);
         latest_quote.show();
@@ -39,7 +39,7 @@ impl StoxDataGrid {
             .margin_bottom(10)
             .vexpand(true)
             .build();
-            
+
         let notebook = Notebook::builder()
             .focusable(true)
             .hexpand(true)
@@ -49,11 +49,17 @@ impl StoxDataGrid {
 
         grid.attach(&symbol_label, 0, 0, 100, 100);
         grid.attach_next_to(&name, Some(&symbol_label), PositionType::Bottom, 100, 100);
-        grid.attach_next_to(&latest_quote, Some(&symbol_label), PositionType::Right, 100, 100);
+        grid.attach_next_to(
+            &latest_quote,
+            Some(&symbol_label),
+            PositionType::Right,
+            100,
+            100,
+        );
         grid.attach_next_to(&notebook, Some(&name), PositionType::Bottom, 300, 100);
 
         grid.show();
-        
-        return grid
+
+        return grid;
     }
 }
