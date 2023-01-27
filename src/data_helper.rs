@@ -13,6 +13,12 @@ pub fn stox_get_main_info(symbol: String) -> (String, String) {
     return (name, latest_quote)
 }
 
+pub fn stox_get_ranges(symbol: String) -> Vec<String> {
+    let provider = yahoo::YahooConnector::new();
+    let mut valid_ranges = &provider.get_latest_quotes(&symbol, "1h").unwrap().chart.result[0].meta.valid_ranges;
+    valid_ranges.to_vec()
+}
+
 pub fn stox_get_chart_x_axis(response: YResponse) -> Vec<String> {
     let mut axis: Vec<String> = vec![];
     for index in response.chart.result.into_iter() {
