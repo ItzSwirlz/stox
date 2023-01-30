@@ -17,7 +17,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: sudo apt update && sudo apt install librust-gtk4-dev librust-gtk4-sys-dev -y
+      run: sudo apt update && sudo apt install libgtk-4-dev librust-gtk4-sys-dev -y
     - name: Build
       run: cargo build --verbose
 #    - name: Run tests
