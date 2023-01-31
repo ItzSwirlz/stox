@@ -7,8 +7,9 @@ use gtk4::*;
 use gtk4::prelude::*;
 use gtk4::glib::*;
 use once_cell::sync::Lazy;
+use yahoo_finance_api as yahoo;
 #[derive(Default)]
-pub struct StoxSidebarItem {child: RefCell<Option<gtk4::Widget>>, symbol: Cell<String>}
+pub struct StoxSidebarItem {child: RefCell<Option<gtk4::Widget>>, symbol: Cell<String>, desc_label: Cell<Label>, quote_label: Cell<Label>}
 
 #[glib::object_subclass]
 impl ObjectSubclass for StoxSidebarItem {
@@ -95,6 +96,8 @@ impl ObjectImpl for StoxSidebarItem {
             grid.attach_next_to(&desc, Some(&symbol_label), PositionType::Bottom, 100, 100);
             obj.set_child_visible(true);
             *self.child.borrow_mut() = Some(grid.upcast::<gtk4::Widget>());
+
+            StoxSidebarItem::start_ticking(self, symbol, desc, quote_label);  // start ticking immediately
         }
     }
 }
@@ -102,3 +105,36 @@ impl ObjectImpl for StoxSidebarItem {
 impl ListBoxRowImpl for StoxSidebarItem {}
 
 impl WidgetImpl for StoxSidebarItem {}
+
+impl StoxSidebarItem {
+    pub fn start_ticking(&self, symbol: String, desc_label: Label, quote_label: Label) {
+        let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
+
+        std::thread::spawn(move || {
+            let provider = yahoo::YahooConnector::new();
+
+            loop {
+                let latest_quote = provider
+                    .get_latest_quotes(symbol.as_str(), "1h")
+                    .unwrap()
+                    .last_quote()
+                    .unwrap()
+                    .close;
+                let latest_quote = format!("{:.2}", latest_quote); // limit to two decimal places
+
+                let ref short_name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name;
+
+                sender.send((latest_quote, short_name.clone())).unwrap();
+
+                std::thread::sleep(std::time::Duration::from_secs(60));
+            }
+        });
+
+        receiver.attach(None, move |(latest_quote, short_name)| {
+            quote_label.set_text(&latest_quote.to_string());
+            desc_label.set_text(&short_name.to_string());
+
+            Continue(true)
+        });
+    }
+}

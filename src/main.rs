@@ -1,12 +1,11 @@
 mod data_helper;
 mod datagrid;
-mod symbolbox;
+mod sidebar_item;
 
 use datagrid::StoxDataGrid;
-use glib::Value;
 use gtk4::prelude::*;
 use gtk4::*;
-use symbolbox::StoxSidebarItem;
+use sidebar_item::StoxSidebarItem;
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
@@ -49,7 +48,6 @@ fn build_ui(app: &Application) {
         let sidebar_item = StoxSidebarItem::new(ticker);
         sidebar_item.show();
         sidebar.append(&sidebar_item);
-       // sidebar_item.start_ticking();
     }
     //sidebar.connect_row_selected(move |_, _| {
     //    StoxDataGrid::update_symbol(datagrid, sidebar.selected_row().unwrap()
