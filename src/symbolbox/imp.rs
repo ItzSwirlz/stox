@@ -1,15 +1,14 @@
-use std::borrow::BorrowMut;
 use std::cell::RefCell;
+use std::cell::Cell;
 
 use gtk4::glib::subclass::types::ObjectSubclass;
 use gtk4::subclass::prelude::*;
 use gtk4::*;
 use gtk4::prelude::*;
 use gtk4::glib::*;
-use yahoo_finance_api as yahoo;
 use once_cell::sync::Lazy;
 #[derive(Default)]
-pub struct StoxSidebarItem {child: RefCell<Option<gtk4::Widget>>, symbol: RefCell<String>}
+pub struct StoxSidebarItem {child: RefCell<Option<gtk4::Widget>>, symbol: Cell<String>}
 
 #[glib::object_subclass]
 impl ObjectSubclass for StoxSidebarItem {
@@ -28,7 +27,17 @@ impl ObjectImpl for StoxSidebarItem {
     fn set_property(&self, _id: usize, _value: &Value, _pspec: &ParamSpec) {
         match _pspec.name() {
             _ => {
-                self.symbol.replace(_value.get().unwrap());
+                let symbol = _value.get::<Option<String>>().expect("Failed to get value").unwrap();
+                self.symbol.set(symbol);
+                self.constructed();  // ensure we reconstruct
+            }
+        }
+    }
+
+    fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
+        match _pspec.name() {
+            _ => {
+                self.symbol.take().to_string().to_value()
             }
         }
     }
@@ -61,30 +70,32 @@ impl ObjectImpl for StoxSidebarItem {
 
         desc.show(); // we won't let the UI wait for the yahoo ping
 
-        let symbol_label = Label::builder()
-            .halign(Align::Start)
-            .label(self.symbol.take().as_str())
-            .visible(true)
-            .build();
+        let symbol = self.symbol.take();
+        // Sometimes an empty string value can be initialized, ignore it
+        if symbol.len() != 0 {
+            let symbol_label = Label::builder()
+                .halign(Align::Start)
+                .label(symbol.as_str())
+                .build();
 
-        symbol_label.show();
+            symbol_label.show();
 
-        let grid = Grid::builder()
-            .margin_start(10)
-            .margin_end(10)
-            .margin_top(10)
-            .margin_bottom(10)
-            .column_homogeneous(true)
-            .hexpand(true)
-            .visible(true)
-            .build();
+            let grid = Grid::builder()
+                .margin_start(10)
+                .margin_end(10)
+                .margin_top(10)
+                .margin_bottom(10)
+                .column_homogeneous(true)
+                .hexpand(true)
+            .   build();
 
-        grid.set_parent(&*obj);
-        grid.attach(&symbol_label, 0, 0, 100, 100);
-        grid.attach(&quote_box, 0, 0, 100, 100);
-        grid.attach_next_to(&desc, Some(&symbol_label), PositionType::Bottom, 100, 100);
-        obj.set_child_visible(true);
-        *self.child.borrow_mut() = Some(grid.upcast::<gtk4::Widget>());
+            grid.set_parent(&*obj);
+            grid.attach(&symbol_label, 0, 0, 100, 200);
+            grid.attach(&quote_box, 0, 0, 100, 100);
+            grid.attach_next_to(&desc, Some(&symbol_label), PositionType::Bottom, 100, 100);
+            obj.set_child_visible(true);
+            *self.child.borrow_mut() = Some(grid.upcast::<gtk4::Widget>());
+        }
     }
 }
 

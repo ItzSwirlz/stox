@@ -46,7 +46,7 @@ fn build_ui(app: &Application) {
 
     let tickers = ["^DJI", "AAPL", "MSFT"];
     for ticker in tickers {
-        let sidebar_item = StoxSidebarItem::new(ticker.to_string());
+        let sidebar_item = StoxSidebarItem::new(ticker);
         sidebar_item.show();
         sidebar.append(&sidebar_item);
        // sidebar_item.start_ticking();

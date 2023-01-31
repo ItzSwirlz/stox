@@ -13,9 +13,9 @@ glib::wrapper! {
 }
 
 impl StoxSidebarItem {
-    pub fn new(symbol: String) -> Self {
-        let obj: StoxSidebarItem = Object::builder().build();
-        obj.set_property("symbol", symbol);
+    pub fn new(symbol: &str) -> Self {
+        let obj: StoxSidebarItem = Object::builder().property("symbol", symbol.to_value()).build();
+
         return obj;
     }
 
