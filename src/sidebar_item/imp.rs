@@ -126,41 +126,27 @@ impl StoxSidebarItem {
             let provider = yahoo::YahooConnector::new();
 
             loop {
-                let latest_quote = provider
-                    .get_latest_quotes(symbol.as_str(), "1h")
-                    .unwrap()
-                    .last_quote()
-                    .unwrap()
-                    .close;
-                let latest_quote = (latest_quote * 100.0).trunc() as i64;
-                let latest_quote = Decimal::new(latest_quote, 2); // limit to two decimal places
+                let latest_quotes = provider.get_latest_quotes(symbol.as_str(), "1h").unwrap();
+
+                let last_quote = latest_quotes.last_quote().unwrap().close;
+                let last_quote = (last_quote * 100.0).trunc() as i64;
+                let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
                 let ref short_name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name;
 
-                let url = format!(
-                    "https://query1.finance.yahoo.com/v7/finance/options/{}",
-                    symbol
-                );
-                let financial_data = reqwest::blocking::get(url).unwrap().text().unwrap();
-                let financial_data: serde_json::Value =
-                    serde_json::from_str(&financial_data).unwrap();
+                let currency = &latest_quotes.chart.result[0].meta.currency.to_uppercase();
 
-                let currency = financial_data["optionChain"]["result"][0]["quote"]["currency"]
-                    .as_str()
-                    .unwrap()
-                    .to_uppercase();
+                let last_quote =
+                    Money::from_decimal(last_quote, iso::find(&currency).unwrap()).to_string();
 
-                let latest_quote =
-                    Money::from_decimal(latest_quote, iso::find(&currency).unwrap()).to_string();
-
-                sender.send((latest_quote, short_name.clone())).unwrap();
+                sender.send((last_quote, short_name.clone())).unwrap();
 
                 std::thread::sleep(std::time::Duration::from_secs(60));
             }
         });
 
-        receiver.attach(None, move |(latest_quote, short_name)| {
-            quote_label.set_text(&latest_quote.to_string());
+        receiver.attach(None, move |(last_quote, short_name)| {
+            quote_label.set_text(&last_quote.to_string());
             desc_label.set_text(&short_name.to_string());
 
             Continue(true)
