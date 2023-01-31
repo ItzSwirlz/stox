@@ -1,15 +1,26 @@
-use std::cell::RefCell;
+use std::borrow::BorrowMut;
 use std::cell::Cell;
+use std::cell::RefCell;
+
+use rust_decimal::Decimal;
+use rusty_money::{iso, Money};
 
 use gtk4::glib::subclass::types::ObjectSubclass;
+use gtk4::glib::*;
+use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
 use gtk4::*;
-use gtk4::prelude::*;
-use gtk4::glib::*;
+
 use once_cell::sync::Lazy;
 use yahoo_finance_api as yahoo;
+
 #[derive(Default)]
-pub struct StoxSidebarItem {child: RefCell<Option<gtk4::Widget>>, symbol: Cell<String>, desc_label: Cell<Label>, quote_label: Cell<Label>}
+pub struct StoxSidebarItem {
+    child: RefCell<Option<gtk4::Widget>>,
+    symbol: Cell<String>,
+    desc_label: Cell<Label>,
+    quote_label: Cell<Label>,
+}
 
 #[glib::object_subclass]
 impl ObjectSubclass for StoxSidebarItem {
@@ -28,21 +39,22 @@ impl ObjectImpl for StoxSidebarItem {
     fn set_property(&self, _id: usize, _value: &Value, _pspec: &ParamSpec) {
         match _pspec.name() {
             _ => {
-                let symbol = _value.get::<Option<String>>().expect("Failed to get value").unwrap();
+                let symbol = _value
+                    .get::<Option<String>>()
+                    .expect("Failed to get value")
+                    .unwrap();
                 self.symbol.set(symbol);
-                self.constructed();  // ensure we reconstruct
+                self.constructed(); // ensure we reconstruct
             }
         }
     }
 
     fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
         match _pspec.name() {
-            _ => {
-                self.symbol.take().to_string().to_value()
-            }
+            _ => self.symbol.take().to_string().to_value(),
         }
     }
-    
+
     fn constructed(&self) {
         self.parent_constructed();
         let obj = self.obj();
@@ -88,16 +100,16 @@ impl ObjectImpl for StoxSidebarItem {
                 .margin_bottom(10)
                 .column_homogeneous(true)
                 .hexpand(true)
-            .   build();
+                .build();
 
             grid.set_parent(&*obj);
-            grid.attach(&symbol_label, 0, 0, 100, 200);
+            grid.attach(&symbol_label, 0, 0, 100, 100);
             grid.attach(&quote_box, 0, 0, 100, 100);
             grid.attach_next_to(&desc, Some(&symbol_label), PositionType::Bottom, 100, 100);
             obj.set_child_visible(true);
             *self.child.borrow_mut() = Some(grid.upcast::<gtk4::Widget>());
 
-            StoxSidebarItem::start_ticking(self, symbol, desc, quote_label);  // start ticking immediately
+            StoxSidebarItem::start_ticking(self, symbol, desc, quote_label); // start ticking immediately
         }
     }
 }
@@ -120,9 +132,26 @@ impl StoxSidebarItem {
                     .last_quote()
                     .unwrap()
                     .close;
-                let latest_quote = format!("{:.2}", latest_quote); // limit to two decimal places
+                let latest_quote = (latest_quote * 100.0).trunc() as i64;
+                let latest_quote = Decimal::new(latest_quote, 2); // limit to two decimal places
 
                 let ref short_name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name;
+
+                let url = format!(
+                    "https://query1.finance.yahoo.com/v7/finance/options/{}",
+                    symbol
+                );
+                let financial_data = reqwest::blocking::get(url).unwrap().text().unwrap();
+                let financial_data: serde_json::Value =
+                    serde_json::from_str(&financial_data).unwrap();
+
+                let currency = financial_data["optionChain"]["result"][0]["quote"]["currency"]
+                    .as_str()
+                    .unwrap()
+                    .to_uppercase();
+
+                let latest_quote =
+                    Money::from_decimal(latest_quote, iso::find(&currency).unwrap()).to_string();
 
                 sender.send((latest_quote, short_name.clone())).unwrap();
 

@@ -24,9 +24,9 @@ impl StoxDataGrid {
             .margin_bottom(10)
             .vexpand(true)
             .build();
-            
+
         grid.show();
-        return grid
+        return grid;
     }
 
     pub fn update_symbol(grid: Grid, symbol: &str) -> Grid {
