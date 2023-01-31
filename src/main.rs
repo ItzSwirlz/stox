@@ -3,6 +3,7 @@ mod datagrid;
 mod symbolbox;
 
 use datagrid::StoxDataGrid;
+use glib::Value;
 use gtk4::prelude::*;
 use gtk4::*;
 use symbolbox::StoxSidebarItem;
@@ -45,10 +46,14 @@ fn build_ui(app: &Application) {
 
     let tickers = ["^DJI", "AAPL", "MSFT"];
     for ticker in tickers {
-        let sidebar_item = StoxSidebarItem::new(ticker);
-        sidebar.append(&sidebar_item.0);
-        StoxSidebarItem::start_ticking(sidebar_item.1.to_string(), sidebar_item.2, sidebar_item.3);
+        let sidebar_item = StoxSidebarItem::new(ticker.to_string());
+        sidebar_item.show();
+        sidebar.append(&sidebar_item);
+       // sidebar_item.start_ticking();
     }
+    //sidebar.connect_row_selected(move |_, _| {
+    //    StoxDataGrid::update_symbol(datagrid, sidebar.selected_row().unwrap()
+    //});
 
     let viewport = Viewport::builder()
         .child(&sidebar)
@@ -68,7 +73,7 @@ fn build_ui(app: &Application) {
 
     b.append(&scroll_window);
 
-    let datagrid = StoxDataGrid::new("AAPL");
+    let datagrid = StoxDataGrid::new_initial();
     datagrid.show();
 
     b.append(&datagrid);

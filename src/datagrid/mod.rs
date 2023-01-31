@@ -12,7 +12,24 @@ glib::wrapper! {
 }
 
 impl StoxDataGrid {
-    pub fn new(symbol: &str) -> Grid {
+    // What initially pops up
+    pub fn new_initial() -> Grid {
+        let grid = Grid::builder()
+            .hexpand(true)
+            .width_request(850)
+            .halign(Align::Center)
+            .margin_start(10)
+            .margin_end(10)
+            .margin_top(10)
+            .margin_bottom(10)
+            .vexpand(true)
+            .build();
+            
+        grid.show();
+        return grid
+    }
+
+    pub fn update_symbol(grid: Grid, symbol: &str) -> Grid {
         let symbol_label = Label::builder()
             .valign(Align::Baseline)
             .margin_end(10)
@@ -28,17 +45,6 @@ impl StoxDataGrid {
         let latest_quote = Label::new(Some(info.1.as_str()));
         latest_quote.set_halign(Align::End);
         latest_quote.show();
-
-        let grid = Grid::builder()
-            .hexpand(true)
-            .width_request(850)
-            .halign(Align::Center)
-            .margin_start(10)
-            .margin_end(10)
-            .margin_top(10)
-            .margin_bottom(10)
-            .vexpand(true)
-            .build();
 
         let notebook = Notebook::builder()
             .focusable(true)
