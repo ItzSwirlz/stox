@@ -10,6 +10,10 @@ cargo = find_program('cargo', required: true)
 
 prefix = get_option('prefix')
 bindir = prefix / get_option('bindir')
+localedir = prefix / get_option('localedir')
+
+podir = meson.project_source_root () / 'po'
+gettext_package = meson.project_name()
 
 if get_option('profile') == 'development'
   profile = 'Devel'

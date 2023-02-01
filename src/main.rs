@@ -1,15 +1,25 @@
+mod config;
 mod data_helper;
 mod datagrid;
 mod sidebar_item;
 
+use gettextrs::*;
 use datagrid::StoxDataGrid;
 use gtk4::prelude::*;
 use gtk4::*;
 use sidebar_item::StoxSidebarItem;
+use config::*;
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
 fn main() {
+    setlocale(LocaleCategory::LcAll, "");
+    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR)
+        .unwrap_or_else(|_| panic!("Unable to bind text domain for {}", GETTEXT_PACKAGE));
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8").unwrap();
+    textdomain(GETTEXT_PACKAGE)
+        .unwrap_or_else(|_| panic!("Unable to switch to text domain {}", GETTEXT_PACKAGE));
+
     // Create a new application
     let app = Application::builder().application_id(APP_ID).build();
 
@@ -24,7 +34,7 @@ fn build_ui(app: &Application) {
     let b = Box::new(Orientation::Horizontal, 10);
     let searchbar = SearchEntry::builder()
         .focusable(true)
-        .placeholder_text("Search for a symbol...")
+        .placeholder_text(&gettext("Search for a symbol..."))
         .build();
 
     searchbar.show();

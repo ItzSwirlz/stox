@@ -1,3 +1,12 @@
+global_conf = configuration_data()
+global_conf.set_quoted('GETTEXT_PACKAGE', gettext_package)
+global_conf.set_quoted('LOCALEDIR', localedir)
+config = configure_file(
+  input: 'config.rs.in',
+  output: 'config.rs',
+  configuration: global_conf
+)
+
 cargo_env = [ 'CARGO_HOME=' + meson.project_build_root() / 'cargo-home' ]
 
 cargo_options = [ '--manifest-path', meson.project_source_root() / 'Cargo.toml' ]
