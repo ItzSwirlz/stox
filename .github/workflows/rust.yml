@@ -17,9 +17,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: sudo apt update && sudo apt install libgtk-4-dev librust-gtk4-sys-dev -y
+      run: sudo apt update && sudo apt install libgtk-4-dev librust-gtk4-sys-dev meson ninja-build gettext -y
     - name: Build
-      run: cargo build --verbose
+      run: meson build && ninja -C build
 #    - name: Run tests
 #      run: cargo test --verbose
 # tests definitely wont work right now
