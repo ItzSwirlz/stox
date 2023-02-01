@@ -1,28 +1,28 @@
 use chrono::prelude::*;
-use yahoo::YResponse;
+use rust_decimal::Decimal;
+use rusty_money::{iso, Money};
+use yahoo::{YResponse, YahooConnector};
 use yahoo_finance_api as yahoo;
 
-pub fn stox_get_main_info(symbol: String) -> (String, String) {
-    let provider = yahoo::YahooConnector::new();
+pub fn stox_get_main_info(provider: &YahooConnector, symbol: &str) -> (String, String) {
+    let latest_quotes = provider.get_latest_quotes(symbol, "1h").unwrap();
 
-    let latest_quote = provider
-        .get_latest_quotes(symbol.as_str(), "1h")
-        .unwrap()
-        .last_quote()
-        .unwrap()
-        .close;
-    let latest_quote = format!("{:.2}", latest_quote); // limit to two decimal places
+    let last_quote = latest_quotes.last_quote().unwrap().close;
+    let last_quote = (last_quote * 100.0).trunc() as i64;
+    let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
-    let name = provider.search_ticker(&symbol).unwrap().quotes[0]
-        .short_name
-        .to_string();
+    let ref short_name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name;
 
-    return (name, latest_quote);
+    let currency = &latest_quotes.chart.result[0].meta.currency.to_uppercase();
+
+    let last_quote = Money::from_decimal(last_quote, iso::find(&currency).unwrap()).to_string();
+
+    return (last_quote, short_name.clone());
 }
 
 pub fn stox_get_ranges(symbol: String) -> Vec<String> {
     let provider = yahoo::YahooConnector::new();
-    let mut valid_ranges = &provider
+    let valid_ranges = &provider
         .get_latest_quotes(&symbol, "1h")
         .unwrap()
         .chart

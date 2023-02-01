@@ -1,71 +1,43 @@
 mod imp;
 
-use gtk4::traits::*;
+use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::*;
 
-use crate::data_helper::{stox_get_main_info, stox_get_ranges};
+use gtk4::glib::*;
+use yahoo_finance_api::YahooConnector;
+
+use crate::data_helper::stox_get_main_info;
 
 glib::wrapper! {
     pub struct StoxDataGrid(ObjectSubclass<imp::StoxDataGrid>)
-        @extends Grid, Widget,
+        @extends Box, Widget,
         @implements Actionable, Accessible, Buildable, ConstraintTarget;
 }
 
 impl StoxDataGrid {
-    // What initially pops up
-    pub fn new_initial() -> Grid {
-        let grid = Grid::builder()
-            .hexpand(true)
-            .width_request(850)
-            .halign(Align::Center)
-            .margin_start(10)
-            .margin_end(10)
-            .margin_top(10)
-            .margin_bottom(10)
-            .vexpand(true)
-            .build();
+    pub fn new() -> Self {
+        let obj: StoxDataGrid = Object::builder().build();
 
-        grid.show();
-        return grid;
+        return obj;
     }
 
-    pub fn update_symbol(grid: Grid, symbol: &str) -> Grid {
-        let symbol_label = Label::builder()
-            .valign(Align::Baseline)
-            .margin_end(10)
-            .label(&symbol)
-            .build();
+    pub fn update(&self, symbol: String) {
+        if self.imp().symbol_label.borrow().label() == symbol {
+            return;
+        }
 
-        symbol_label.show();
+        let provider = YahooConnector::new();
 
-        let info = stox_get_main_info(symbol.to_string());
-        let name = Label::new(Some(info.0.as_str()));
-        name.show();
+        let (last_quote, short_name) = stox_get_main_info(&provider, symbol.as_str());
 
-        let latest_quote = Label::new(Some(info.1.as_str()));
-        latest_quote.set_halign(Align::End);
-        latest_quote.show();
-
-        let notebook = Notebook::builder()
-            .focusable(true)
-            .hexpand(true)
-            .vexpand(true)
-            .margin_top(10)
-            .build();
-
-        grid.attach(&symbol_label, 0, 0, 100, 100);
-        grid.attach_next_to(&name, Some(&symbol_label), PositionType::Bottom, 100, 100);
-        grid.attach_next_to(
-            &latest_quote,
-            Some(&symbol_label),
-            PositionType::Right,
-            100,
-            100,
-        );
-        grid.attach_next_to(&notebook, Some(&name), PositionType::Bottom, 300, 100);
-
-        grid.show();
-
-        return grid;
+        self.imp().symbol_label.borrow().set_label(symbol.as_str());
+        self.imp()
+            .name_label
+            .borrow()
+            .set_label(short_name.as_str());
+        self.imp()
+            .latest_quote
+            .borrow()
+            .set_label(last_quote.as_str());
     }
 }

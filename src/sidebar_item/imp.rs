@@ -1,9 +1,5 @@
-use std::borrow::BorrowMut;
 use std::cell::Cell;
 use std::cell::RefCell;
-
-use rust_decimal::Decimal;
-use rusty_money::{iso, Money};
 
 use gtk4::glib::subclass::types::ObjectSubclass;
 use gtk4::glib::*;
@@ -14,10 +10,12 @@ use gtk4::*;
 use once_cell::sync::Lazy;
 use yahoo_finance_api as yahoo;
 
+use crate::data_helper::stox_get_main_info;
+
 #[derive(Default)]
 pub struct StoxSidebarItem {
     child: RefCell<Option<gtk4::Widget>>,
-    symbol: Cell<String>,
+    symbol: RefCell<String>,
     desc_label: Cell<Label>,
     quote_label: Cell<Label>,
 }
@@ -43,7 +41,7 @@ impl ObjectImpl for StoxSidebarItem {
                     .get::<Option<String>>()
                     .expect("Failed to get value")
                     .unwrap();
-                self.symbol.set(symbol);
+                *self.symbol.borrow_mut() = symbol;
                 self.constructed(); // ensure we reconstruct
             }
         }
@@ -51,7 +49,7 @@ impl ObjectImpl for StoxSidebarItem {
 
     fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
         match _pspec.name() {
-            _ => self.symbol.take().to_string().to_value(),
+            _ => self.symbol.borrow().to_string().to_value(),
         }
     }
 
@@ -83,7 +81,8 @@ impl ObjectImpl for StoxSidebarItem {
 
         desc.show(); // we won't let the UI wait for the yahoo ping
 
-        let symbol = self.symbol.take();
+        let symbol = self.symbol.borrow();
+
         // Sometimes an empty string value can be initialized, ignore it
         if symbol.len() != 0 {
             let symbol_label = Label::builder()
@@ -109,7 +108,7 @@ impl ObjectImpl for StoxSidebarItem {
             obj.set_child_visible(true);
             *self.child.borrow_mut() = Some(grid.upcast::<gtk4::Widget>());
 
-            StoxSidebarItem::start_ticking(self, symbol, desc, quote_label); // start ticking immediately
+            StoxSidebarItem::start_ticking(self, symbol.to_string(), desc, quote_label);
         }
     }
 }
@@ -126,20 +125,9 @@ impl StoxSidebarItem {
             let provider = yahoo::YahooConnector::new();
 
             loop {
-                let latest_quotes = provider.get_latest_quotes(symbol.as_str(), "1h").unwrap();
-
-                let last_quote = latest_quotes.last_quote().unwrap().close;
-                let last_quote = (last_quote * 100.0).trunc() as i64;
-                let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
-
-                let ref short_name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name;
-
-                let currency = &latest_quotes.chart.result[0].meta.currency.to_uppercase();
-
-                let last_quote =
-                    Money::from_decimal(last_quote, iso::find(&currency).unwrap()).to_string();
-
-                sender.send((last_quote, short_name.clone())).unwrap();
+                sender
+                    .send(stox_get_main_info(&provider, symbol.as_str()))
+                    .unwrap();
 
                 std::thread::sleep(std::time::Duration::from_secs(60));
             }

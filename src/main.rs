@@ -4,7 +4,10 @@ mod datagrid;
 mod sidebar_item;
 
 use gettextrs::*;
+use std::cell::RefCell;
+
 use datagrid::StoxDataGrid;
+use gtk4::gdk::Display;
 use gtk4::prelude::*;
 use gtk4::*;
 use sidebar_item::StoxSidebarItem;
@@ -31,6 +34,33 @@ fn main() {
 }
 
 fn build_ui(app: &Application) {
+    let css_provider = CssProvider::new();
+
+    css_provider.load_from_data(
+        r#"
+            #symbol {
+                font-weight: bold;
+                font-size: 50px;
+            }
+
+            #company_name {
+                font-style: italic;
+                font-size: 25px;
+            }
+
+            #latest_quote {
+                font-size: 25px;
+            }
+        "#
+        .as_bytes(),
+    );
+
+    StyleContext::add_provider_for_display(
+        &Display::default().unwrap(),
+        &css_provider,
+        STYLE_PROVIDER_PRIORITY_APPLICATION,
+    );
+
     let b = Box::new(Orientation::Horizontal, 10);
     let searchbar = SearchEntry::builder()
         .focusable(true)
@@ -81,10 +111,19 @@ fn build_ui(app: &Application) {
 
     b.append(&scroll_window);
 
-    let datagrid = StoxDataGrid::new_initial();
-    datagrid.show();
+    let datagrid = RefCell::new(StoxDataGrid::new());
+    b.append(&*datagrid.borrow());
 
-    b.append(&datagrid);
+    sidebar.connect_row_selected(move |_, row| {
+        if let Some(row) = row {
+            if row.widget_name() != "StoxSidebarItem" {
+                return;
+            }
+
+            let symbol = row.property::<String>("symbol");
+            (*datagrid.borrow()).update(symbol);
+        }
+    });
 
     let window = ApplicationWindow::builder()
         .application(app)
