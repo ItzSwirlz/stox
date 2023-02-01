@@ -7,6 +7,14 @@ config = configure_file(
   configuration: global_conf
 )
 
+# Copy the config.rs output to the source directory.
+run_command(
+  'cp',
+  meson.project_build_root() / 'src' / 'config.rs',
+  meson.project_source_root() /  'src' / 'config.rs',
+  check: true
+)
+
 cargo_env = [ 'CARGO_HOME=' + meson.project_build_root() / 'cargo-home' ]
 
 cargo_options = [ '--manifest-path', meson.project_source_root() / 'Cargo.toml' ]
