@@ -4,7 +4,6 @@ use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::*;
 
 use gtk4::glib::*;
-use yahoo_finance_api::YahooConnector;
 
 use crate::data_helper::stox_get_main_info;
 
@@ -26,9 +25,7 @@ impl StoxDataGrid {
             return;
         }
 
-        let provider = YahooConnector::new();
-
-        let (last_quote, short_name) = stox_get_main_info(&provider, symbol.as_str());
+        let (last_quote, short_name) = stox_get_main_info(symbol.as_str());
 
         self.imp().symbol_label.borrow().set_label(symbol.as_str());
         self.imp()

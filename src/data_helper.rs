@@ -1,10 +1,17 @@
 use chrono::prelude::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
+use yahoo::*;
 use yahoo::{YResponse, YahooConnector};
 use yahoo_finance_api as yahoo;
 
-pub fn stox_get_main_info(provider: &YahooConnector, symbol: &str) -> (String, String) {
+pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {
+    let provider = YahooConnector::new();
+    provider.search_ticker(symbol).unwrap().quotes
+}
+
+pub fn stox_get_main_info(symbol: &str) -> (String, String) {
+    let provider = yahoo::YahooConnector::new();
     let latest_quotes = provider.get_latest_quotes(symbol, "1h").unwrap();
 
     let last_quote = latest_quotes.last_quote().unwrap().close;

@@ -1,6 +1,5 @@
 mod imp;
 
-use gtk4::traits::*;
 use gtk4::*;
 
 use gtk4::glib::*;

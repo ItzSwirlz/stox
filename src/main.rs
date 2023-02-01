@@ -3,15 +3,18 @@ mod data_helper;
 mod datagrid;
 mod sidebar_item;
 
+use data_helper::stox_search_symbol;
 use gettextrs::*;
+use gtk4::glib::clone;
 use std::cell::RefCell;
+use std::sync::*;
 
+use config::*;
 use datagrid::StoxDataGrid;
 use gtk4::gdk::Display;
 use gtk4::prelude::*;
 use gtk4::*;
 use sidebar_item::StoxSidebarItem;
-use config::*;
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
@@ -83,15 +86,36 @@ fn build_ui(app: &Application) {
     sidebar.set_height_request(800);
     sidebar.append(&searchbar_row);
 
+    let sidebar_symbols: Arc<Mutex<Vec<StoxSidebarItem>>> = Arc::new(Mutex::new(Vec::new()));
     let tickers = ["^DJI", "AAPL", "MSFT"];
     for ticker in tickers {
         let sidebar_item = StoxSidebarItem::new(ticker);
         sidebar_item.show();
         sidebar.append(&sidebar_item);
+        sidebar_symbols.lock().unwrap().push(sidebar_item);
     }
     //sidebar.connect_row_selected(move |_, _| {
     //    StoxDataGrid::update_symbol(datagrid, sidebar.selected_row().unwrap()
     //});
+
+    searchbar.connect_search_changed(clone!(@weak sidebar => move |search| {
+        if search.text().to_string().is_empty() {
+            // Prevent panic
+            return
+        }
+        for item in sidebar_symbols.lock().unwrap().iter() {
+            item.hide();
+        }
+        sidebar_symbols.lock().unwrap().clear();
+
+        let quotes = stox_search_symbol(&search.text().to_string());
+        for i in quotes.iter() {
+            let sidebar_item = StoxSidebarItem::new(&i.symbol);
+            sidebar_item.show();
+            sidebar.append(&sidebar_item);
+            sidebar_symbols.lock().unwrap().push(sidebar_item);
+        }
+    }));
 
     let viewport = Viewport::builder()
         .child(&sidebar)

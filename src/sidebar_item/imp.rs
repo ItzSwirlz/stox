@@ -8,7 +8,6 @@ use gtk4::subclass::prelude::*;
 use gtk4::*;
 
 use once_cell::sync::Lazy;
-use yahoo_finance_api as yahoo;
 
 use crate::data_helper::stox_get_main_info;
 
@@ -122,21 +121,13 @@ impl StoxSidebarItem {
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
         std::thread::spawn(move || {
-            let provider = yahoo::YahooConnector::new();
-
-            loop {
-                sender
-                    .send(stox_get_main_info(&provider, symbol.as_str()))
-                    .unwrap();
-
-                std::thread::sleep(std::time::Duration::from_secs(60));
-            }
+            sender.send(stox_get_main_info(symbol.as_str())).unwrap();
+            std::thread::sleep(std::time::Duration::from_secs(30));
         });
 
         receiver.attach(None, move |(last_quote, short_name)| {
             quote_label.set_text(&last_quote.to_string());
             desc_label.set_text(&short_name.to_string());
-
             Continue(true)
         });
     }
