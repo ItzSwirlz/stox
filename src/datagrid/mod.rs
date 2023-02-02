@@ -1,5 +1,8 @@
 mod imp;
 
+use std::borrow::Borrow;
+use std::cell::{Cell, RefCell};
+
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::*;
 
@@ -20,22 +23,35 @@ impl StoxDataGrid {
         return obj;
     }
 
-    fn update_info(&self, symbol: &str, last_quote: &str, short_name: &str) {
-        self.imp().symbol_label.borrow().set_label(symbol);
-        self.imp().name_label.borrow().set_label(short_name);
-        self.imp().latest_quote.borrow().set_label(last_quote);
-    }
-
     pub fn update(&self, symbol: String) {
-        if self.imp().symbol_label.borrow().label() == symbol {
+        let symbol_label = self.imp().symbol_label.borrow();
+
+        if symbol_label.label() == symbol {
             return;
         }
 
-        match stox_get_main_info(symbol.as_str()) {
-            Ok((last_quote, short_name)) => {
-                self.update_info(symbol.as_str(), last_quote.as_str(), short_name.as_str());
-            }
-            Err(_) => self.update_info(symbol.as_str(), "???", "???"),
-        }
+        symbol_label.set_label(&symbol);
+
+        let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
+
+        let symbol = RefCell::new(symbol);
+
+        std::thread::spawn(move || match stox_get_main_info(&*symbol.borrow()) {
+            Ok(main_info) => sender.send(main_info).unwrap(),
+            Err(_) => sender.send(("???".to_string(), "???".to_string())).unwrap(),
+        });
+
+        let name_label = self.imp().name_label.borrow().clone();
+        let latest_quote = self.imp().latest_quote.borrow().clone();
+
+        name_label.set_label("--");
+        latest_quote.set_label("--");
+
+        receiver.attach(None, move |(last_quote, short_name)| {
+            latest_quote.set_label(&last_quote);
+            name_label.set_label(&short_name);
+
+            Continue(false)
+        });
     }
 }
