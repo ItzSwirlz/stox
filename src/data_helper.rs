@@ -22,11 +22,14 @@ pub fn stox_get_main_info(symbol: &str) -> Result<(String, String)> {
     let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
 
     let currency = &latest_quotes.chart.result[0].meta.currency.to_uppercase();
-    let currency = iso::find(&currency).context("currency not found")?;
 
-    let last_quote = Money::from_decimal(last_quote, currency).to_string();
-
-    Ok((last_quote, short_name.clone()))
+    match iso::find(&currency) {
+        Some(currency) => {
+            let last_quote = Money::from_decimal(last_quote, currency).to_string();
+            Ok((last_quote, short_name.clone()))
+        }
+        None => Ok((last_quote.to_string(), short_name.clone())),
+    }
 }
 
 pub fn stox_get_ranges(symbol: String) -> Vec<String> {
