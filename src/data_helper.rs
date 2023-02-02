@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use chrono::prelude::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
@@ -10,21 +11,22 @@ pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {
     provider.search_ticker(symbol).unwrap().quotes
 }
 
-pub fn stox_get_main_info(symbol: &str) -> (String, String) {
+pub fn stox_get_main_info(symbol: &str) -> Result<(String, String)> {
     let provider = yahoo::YahooConnector::new();
-    let latest_quotes = provider.get_latest_quotes(symbol, "1h").unwrap();
+    let latest_quotes = provider.get_latest_quotes(symbol, "1h")?;
 
-    let last_quote = latest_quotes.last_quote().unwrap().close;
+    let last_quote = latest_quotes.last_quote()?.close;
     let last_quote = (last_quote * 100.0).trunc() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
-    let ref short_name = provider.search_ticker(&symbol).unwrap().quotes[0].short_name;
+    let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
 
     let currency = &latest_quotes.chart.result[0].meta.currency.to_uppercase();
+    let currency = iso::find(&currency).context("currency not found")?;
 
-    let last_quote = Money::from_decimal(last_quote, iso::find(&currency).unwrap()).to_string();
+    let last_quote = Money::from_decimal(last_quote, currency).to_string();
 
-    return (last_quote, short_name.clone());
+    Ok((last_quote, short_name.clone()))
 }
 
 pub fn stox_get_ranges(symbol: String) -> Vec<String> {

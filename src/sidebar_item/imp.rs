@@ -120,9 +120,9 @@ impl StoxSidebarItem {
     pub fn start_ticking(&self, symbol: String, desc_label: Label, quote_label: Label) {
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        std::thread::spawn(move || {
-            sender.send(stox_get_main_info(symbol.as_str())).unwrap();
-            std::thread::sleep(std::time::Duration::from_secs(30));
+        std::thread::spawn(move || match stox_get_main_info(symbol.as_str()) {
+            Ok(main_info) => sender.send(main_info).unwrap(),
+            Err(_) => sender.send(("???".to_string(), "???".to_string())).unwrap(),
         });
 
         receiver.attach(None, move |(last_quote, short_name)| {
