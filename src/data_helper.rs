@@ -44,7 +44,9 @@ pub fn stox_get_ranges(symbol: String) -> Vec<String> {
     valid_ranges.to_vec()
 }
 
-pub fn stox_get_chart_x_axis(response: YResponse) -> Vec<String> {
+pub fn stox_get_chart_x_axis(symbol: String) -> Vec<String> {
+    let provider = YahooConnector::new();
+    let response = provider.get_latest_quotes(&symbol, "30m").unwrap();
     let mut axis: Vec<String> = vec![];
     for index in response.chart.result.into_iter() {
         let range = index.meta.range; // (1d, 60m, etc.) indicators
@@ -101,6 +103,25 @@ pub fn stox_get_chart_x_axis(response: YResponse) -> Vec<String> {
                      // TODO: Do something!
                 }
             }
+        }
+    }
+    return axis;
+}
+
+pub fn stox_get_quotes(symbol: String) -> Vec<String> {
+    let provider = YahooConnector::new();
+    let response = provider.get_latest_quotes(&symbol, "30m").unwrap();
+    let mut axis: Vec<String> = vec![];
+    for index_first in response.quotes().into_iter() {
+        for index in index_first.iter() {
+            let quote = index.close;
+            let timestamp = index.timestamp;
+            let day = Utc
+                        .timestamp_opt(timestamp as i64, 0)
+                        .unwrap()
+                        .day()
+                        .to_string();
+            axis.push(day + "," + &quote.to_string());  // Align day with quote, for now assume we are on one-day quotes
         }
     }
     return axis;
