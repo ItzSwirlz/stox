@@ -1,7 +1,6 @@
 mod imp;
 
-use std::borrow::Borrow;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::*;
@@ -23,10 +22,10 @@ impl StoxDataGrid {
         return obj;
     }
 
-    pub fn update(&self, symbol: String) {
+    pub fn update(&self, symbol: String, force_update: bool) {
         let symbol_label = self.imp().symbol_label.borrow();
 
-        if symbol_label.label() == symbol {
+        if !force_update && symbol_label.label() == symbol {
             return;
         }
 

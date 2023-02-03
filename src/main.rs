@@ -145,7 +145,7 @@ fn build_ui(app: &Application) {
             }
 
             let symbol = row.property::<String>("symbol");
-            (*datagrid.borrow()).update(symbol);
+            (*datagrid.borrow()).update(symbol, false);
         }
     });
 

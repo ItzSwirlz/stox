@@ -3,7 +3,7 @@ use chrono::prelude::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
 use yahoo::*;
-use yahoo::{YResponse, YahooConnector};
+use yahoo::YahooConnector;
 use yahoo_finance_api as yahoo;
 
 pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {
@@ -117,11 +117,11 @@ pub fn stox_get_quotes(symbol: String) -> Vec<String> {
             let quote = index.close;
             let timestamp = index.timestamp;
             let day = Utc
-                        .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
-                        .day()
-                        .to_string();
-            axis.push(day + "," + &quote.to_string());  // Align day with quote, for now assume we are on one-day quotes
+                .timestamp_opt(timestamp as i64, 0)
+                .unwrap()
+                .day()
+                .to_string();
+            axis.push(day + "," + &quote.to_string()); // Align day with quote, for now assume we are on one-day quotes
         }
     }
     return axis;

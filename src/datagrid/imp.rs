@@ -100,6 +100,35 @@ impl ObjectImpl for StoxDataGrid {
         grid.show();
         grid.set_parent(&*obj);
 
+        let btns_box = Box::builder()
+            .spacing(10)
+            .orientation(Orientation::Horizontal)
+            .margin_top(10)
+            .build();
+
+        let refresh_btn_box = Box::new(Orientation::Horizontal, 6);
+
+        let refresh_img = Image::from_icon_name("view-refresh");
+        refresh_btn_box.append(&refresh_img);
+
+        let refresh_label = Label::new(Some("Refresh"));
+        refresh_btn_box.append(&refresh_label);
+
+        let refresh_btn = Button::builder().child(&refresh_btn_box).build();
+
+        refresh_btn.connect_clicked(clone!(@weak self as this => move |_| {
+            let symbol = this.symbol_label.borrow().label().to_string();
+            if symbol == "--" {
+                return;
+            }
+
+            this.obj().update(symbol, true);
+        }));
+
+        btns_box.append(&refresh_btn);
+
+        grid.attach(&btns_box, 0, 3, 3, 1);
+
         *self.symbol_label.borrow_mut() = symbol_label;
         *self.name_label.borrow_mut() = name;
         *self.latest_quote.borrow_mut() = latest_quote;
