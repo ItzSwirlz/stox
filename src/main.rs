@@ -115,13 +115,13 @@ fn build_ui(app: &Application) {
     }
 
     searchbar.connect_search_changed(clone!(@weak sidebar, @weak saved_stocks => move |search| {
-        let is_empty = search.text().to_string().is_empty();
+        let search_text = search.text().to_string();
 
         sidebar_symbols.lock().unwrap().retain(|item| {
             let symbol = item.property::<String>("symbol");
             let is_searched = item.property::<bool>("searched");
 
-            if is_empty && !is_searched && (*saved_stocks.borrow()).contains(&symbol) {
+            if search_text.is_empty() && !is_searched && (*saved_stocks.borrow()).contains(&symbol) {
                 item.show()
             } else {
                 item.hide();
@@ -130,7 +130,8 @@ fn build_ui(app: &Application) {
             !is_searched
         });
 
-        if is_empty {
+        // Do not try to ping Yahoo with invalid characters.
+        if search_text.is_empty() || !search_text.is_ascii() {
             return
         }
 
