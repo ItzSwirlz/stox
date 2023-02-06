@@ -122,6 +122,10 @@ impl ObjectImpl for StoxSidebarItem {
             StoxSidebarItem::start_ticking(self, symbol.to_string(), desc, quote_label);
         }
     }
+
+    fn dispose(&self) {
+        self.child.take().unwrap().unparent()
+    }
 }
 
 impl ListBoxRowImpl for StoxSidebarItem {}
