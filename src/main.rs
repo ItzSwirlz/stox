@@ -80,6 +80,7 @@ fn build_ui(app: &Application) {
     );
 
     let b = Box::new(Orientation::Horizontal, 10);
+
     let searchbar = SearchEntry::builder()
         .focusable(true)
         .placeholder_text(&gettext("Search for a symbol..."))
@@ -109,15 +110,25 @@ fn build_ui(app: &Application) {
         sidebar_symbols.lock().unwrap().push(sidebar_item);
     }
 
-    searchbar.connect_search_changed(clone!(@weak sidebar => move |search| {
-        if search.text().to_string().is_empty() {
-            // Prevent panic
+    searchbar.connect_search_changed(clone!(@weak sidebar, @weak saved_stocks => move |search| {
+        let is_empty = search.text().to_string().is_empty();
+
+        sidebar_symbols.lock().unwrap().retain(|item| {
+            let symbol = item.property::<String>("symbol");
+            let is_searched = item.property::<bool>("searched");
+
+            if is_empty && !is_searched && (*saved_stocks.borrow()).contains(&symbol) {
+                item.show()
+            } else {
+                item.hide();
+            }
+
+            !is_searched
+        });
+
+        if is_empty {
             return
         }
-        for item in sidebar_symbols.lock().unwrap().iter() {
-            item.hide();
-        }
-        sidebar_symbols.lock().unwrap().clear();
 
         let quotes = stox_search_symbol(&search.text().to_string());
         for i in quotes.iter() {
