@@ -38,6 +38,11 @@ fn get_persistence_path() -> Result<PathBuf, anyhow::Error> {
 
     let data_home = data_home.unwrap();
 
+    DirBuilder::new()
+        .recursive(true)
+        .mode(0o700)
+        .create(data_home.clone())?;
+
     let path = Path::new(&data_home).join("stox");
 
     if let Err(err) = DirBuilder::new().mode(0o755).create(&path) {
