@@ -2,8 +2,8 @@ use anyhow::Result;
 use chrono::prelude::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
-use yahoo::*;
 use yahoo::YahooConnector;
+use yahoo::*;
 use yahoo_finance_api as yahoo;
 
 pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {

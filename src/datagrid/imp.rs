@@ -13,6 +13,8 @@ pub struct StoxDataGrid {
     pub symbol_label: RefCell<Label>,
     pub name_label: RefCell<Label>,
     pub latest_quote: RefCell<Label>,
+    pub save_btn: RefCell<Button>,
+    pub unsave_btn: RefCell<Button>,
 }
 
 #[glib::object_subclass]
@@ -38,7 +40,7 @@ impl ObjectImpl for StoxDataGrid {
 
     fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
         match _pspec.name() {
-            _ => todo!(),
+            _ => unimplemented!(),
         }
     }
 
@@ -106,26 +108,62 @@ impl ObjectImpl for StoxDataGrid {
             .margin_top(10)
             .build();
 
-        let refresh_btn_box = Box::new(Orientation::Horizontal, 6);
+        {
+            let save_btn_box = Box::new(Orientation::Horizontal, 6);
 
-        let refresh_img = Image::from_icon_name("view-refresh");
-        refresh_btn_box.append(&refresh_img);
+            let star_img = Image::from_icon_name("non-starred");
+            save_btn_box.append(&star_img);
 
-        let refresh_label = Label::new(Some("Refresh"));
-        refresh_btn_box.append(&refresh_label);
+            let save_label = Label::new(Some("Save"));
+            save_btn_box.append(&save_label);
 
-        let refresh_btn = Button::builder().child(&refresh_btn_box).build();
+            let save_btn = Button::builder().child(&save_btn_box).build();
+            btns_box.append(&save_btn);
 
-        refresh_btn.connect_clicked(clone!(@weak self as this => move |_| {
-            let symbol = this.symbol_label.borrow().label().to_string();
-            if symbol == "--" {
-                return;
-            }
+            save_btn.hide();
 
-            this.obj().update(symbol, true);
-        }));
+            *self.save_btn.borrow_mut() = save_btn;
+        }
 
-        btns_box.append(&refresh_btn);
+        {
+            let unsave_btn_box = Box::new(Orientation::Horizontal, 6);
+
+            let star_img = Image::from_icon_name("starred");
+            unsave_btn_box.append(&star_img);
+
+            let unsave_label = Label::new(Some("Unsave"));
+            unsave_btn_box.append(&unsave_label);
+
+            let unsave_btn = Button::builder().child(&unsave_btn_box).build();
+            btns_box.append(&unsave_btn);
+
+            unsave_btn.hide();
+
+            *self.unsave_btn.borrow_mut() = unsave_btn;
+        }
+
+        {
+            let refresh_btn_box = Box::new(Orientation::Horizontal, 6);
+
+            let refresh_img = Image::from_icon_name("view-refresh");
+            refresh_btn_box.append(&refresh_img);
+
+            let refresh_label = Label::new(Some("Refresh"));
+            refresh_btn_box.append(&refresh_label);
+
+            let refresh_btn = Button::builder().child(&refresh_btn_box).build();
+
+            refresh_btn.connect_clicked(clone!(@weak self as this => move |_| {
+                let symbol = this.symbol_label.borrow().label().to_string();
+                if symbol == "--" {
+                    return;
+                }
+
+                this.obj().update(symbol, true, this.unsave_btn.borrow().is_visible());
+            }));
+
+            btns_box.append(&refresh_btn);
+        }
 
         grid.attach(&btns_box, 0, 3, 3, 1);
 

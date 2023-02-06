@@ -15,6 +15,7 @@ use crate::data_helper::stox_get_main_info;
 pub struct StoxSidebarItem {
     child: RefCell<Option<gtk4::Widget>>,
     symbol: RefCell<String>,
+    searched: RefCell<bool>,
     desc_label: Cell<Label>,
     quote_label: Cell<Label>,
 }
@@ -28,27 +29,38 @@ impl ObjectSubclass for StoxSidebarItem {
 
 impl ObjectImpl for StoxSidebarItem {
     fn properties() -> &'static [ParamSpec] {
-        static PROPERTIES: Lazy<Vec<ParamSpec>> =
-            Lazy::new(|| vec![ParamSpecString::builder("symbol").build()]);
+        static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| {
+            vec![
+                ParamSpecString::builder("symbol").build(),
+                ParamSpecBoolean::builder("searched").build(),
+            ]
+        });
         PROPERTIES.as_ref()
     }
 
-    fn set_property(&self, _id: usize, _value: &Value, _pspec: &ParamSpec) {
+    fn set_property(&self, _id: usize, value: &Value, _pspec: &ParamSpec) {
         match _pspec.name() {
-            _ => {
-                let symbol = _value
+            "symbol" => {
+                let symbol = value
                     .get::<Option<String>>()
                     .expect("Failed to get value")
                     .unwrap();
                 *self.symbol.borrow_mut() = symbol;
                 self.constructed(); // ensure we reconstruct
             }
+            "searched" => {
+                let searched = value.get::<bool>().unwrap();
+                *self.searched.borrow_mut() = searched;
+            }
+            _ => unimplemented!(),
         }
     }
 
     fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
         match _pspec.name() {
-            _ => self.symbol.borrow().to_string().to_value(),
+            "symbol" => self.symbol.borrow().to_string().to_value(),
+            "searched" => self.searched.borrow().to_value(),
+            _ => unimplemented!(),
         }
     }
 

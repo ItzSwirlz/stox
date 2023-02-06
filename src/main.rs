@@ -1,20 +1,26 @@
 mod config;
 mod data_helper;
 mod datagrid;
+mod fs_persistence;
 mod sidebar_item;
 
-use data_helper::stox_search_symbol;
-use gettextrs::*;
-use gtk4::glib::clone;
-use std::cell::RefCell;
-use std::sync::*;
-
 use config::*;
+use data_helper::stox_search_symbol;
 use datagrid::StoxDataGrid;
+use fs_persistence::{read_saved_stocks, write_saved_stocks};
+use sidebar_item::StoxSidebarItem;
+
+use gettextrs::*;
+
+use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::gdk::Display;
+use gtk4::glib::clone;
 use gtk4::prelude::*;
 use gtk4::*;
-use sidebar_item::StoxSidebarItem;
+
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::sync::*;
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
@@ -37,10 +43,19 @@ fn main() {
 }
 
 fn build_ui(app: &Application) {
-    let css_provider = CssProvider::new();
+    let mut error_loading_saved_stocks = false;
 
+    let mut saved_stocks = read_saved_stocks();
+    if let Err(_) = saved_stocks {
+        error_loading_saved_stocks = true;
+        saved_stocks = Ok(vec![]);
+    }
+
+    let saved_stocks = Rc::new(RefCell::new(saved_stocks.unwrap()));
+
+    let css_provider = CssProvider::new();
     css_provider.load_from_data(
-        r#"
+        "
             #symbol {
                 font-weight: bold;
                 font-size: 50px;
@@ -54,7 +69,7 @@ fn build_ui(app: &Application) {
             #latest_quote {
                 font-size: 25px;
             }
-        "#
+        "
         .as_bytes(),
     );
 
@@ -87,16 +102,12 @@ fn build_ui(app: &Application) {
     sidebar.append(&searchbar_row);
 
     let sidebar_symbols: Arc<Mutex<Vec<StoxSidebarItem>>> = Arc::new(Mutex::new(Vec::new()));
-    let tickers = ["^DJI", "AAPL", "MSFT"];
-    for ticker in tickers {
-        let sidebar_item = StoxSidebarItem::new(ticker);
+    for ticker in &*saved_stocks.borrow() {
+        let sidebar_item = StoxSidebarItem::new(&ticker, false);
         sidebar_item.show();
         sidebar.append(&sidebar_item);
         sidebar_symbols.lock().unwrap().push(sidebar_item);
     }
-    //sidebar.connect_row_selected(move |_, _| {
-    //    StoxDataGrid::update_symbol(datagrid, sidebar.selected_row().unwrap()
-    //});
 
     searchbar.connect_search_changed(clone!(@weak sidebar => move |search| {
         if search.text().to_string().is_empty() {
@@ -110,7 +121,7 @@ fn build_ui(app: &Application) {
 
         let quotes = stox_search_symbol(&search.text().to_string());
         for i in quotes.iter() {
-            let sidebar_item = StoxSidebarItem::new(&i.symbol);
+            let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
             sidebar_item.show();
             sidebar.append(&sidebar_item);
             sidebar_symbols.lock().unwrap().push(sidebar_item);
@@ -136,6 +147,57 @@ fn build_ui(app: &Application) {
     b.append(&scroll_window);
 
     let datagrid = RefCell::new(StoxDataGrid::new());
+    datagrid.borrow().imp().save_btn.borrow().connect_clicked(
+        clone!(@strong datagrid, @weak saved_stocks => move |_| {
+            if error_loading_saved_stocks {
+                return;
+            }
+
+            let symbol = datagrid.borrow().imp().symbol_label.borrow().label().to_string();
+            (*saved_stocks).borrow_mut().push(symbol);
+
+            if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+                return;
+            }
+
+            datagrid.borrow().imp().save_btn.borrow().hide();
+            datagrid.borrow().imp().unsave_btn.borrow().show();
+        }),
+    );
+    datagrid.borrow().imp().unsave_btn.borrow().connect_clicked(
+        clone!(@strong datagrid, @weak sidebar, @weak saved_stocks => move |_| {
+            if error_loading_saved_stocks {
+                return;
+            }
+
+            let symbol = datagrid.borrow().imp().symbol_label.borrow().label().to_string();
+
+            let index = (*saved_stocks).borrow_mut().iter().position(|value| symbol == value.as_str());
+            (*saved_stocks).borrow_mut().remove(index.unwrap());
+
+            if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+                return;
+            }
+
+            datagrid.borrow().imp().save_btn.borrow().show();
+            datagrid.borrow().imp().unsave_btn.borrow().hide();
+
+            let mut child = sidebar.first_child().unwrap().next_sibling().unwrap();
+            while child.property::<String>("symbol") != symbol {
+                match child.next_sibling() {
+                    Some(next_child) => child = next_child,
+                    None => break
+                }
+            }
+
+            if child.property("searched") {
+                return;
+            }
+
+            child.hide();
+        }),
+    );
+
     b.append(&*datagrid.borrow());
 
     sidebar.connect_row_selected(move |_, row| {
@@ -145,7 +207,13 @@ fn build_ui(app: &Application) {
             }
 
             let symbol = row.property::<String>("symbol");
-            (*datagrid.borrow()).update(symbol, false);
+            let symbol = symbol.as_str();
+
+            datagrid.borrow().update(
+                symbol.to_string(),
+                false,
+                (*saved_stocks).borrow().contains(&symbol.to_string()),
+            );
         }
     });
 
@@ -155,6 +223,22 @@ fn build_ui(app: &Application) {
         .title("Stox")
         .default_height(800)
         .build();
+
+    let error_dialog = MessageDialog::builder()
+        .transient_for(&window)
+        .modal(true)
+        .buttons(ButtonsType::Ok)
+        .text("Error")
+        .secondary_text(concat!(
+            "The saved stocks could not be loaded. Try restaring the app.\n",
+            "\nTo prevent data loss, saving/unsaving stocks will be disabled until this is fixed."
+        ))
+        .message_type(MessageType::Error)
+        .build();
+
+    if error_loading_saved_stocks {
+        error_dialog.run_async(|obj, _| obj.close());
+    }
 
     let header_bar = HeaderBar::new();
     header_bar.set_title_widget(Some(&Label::new(Some("Stox"))));

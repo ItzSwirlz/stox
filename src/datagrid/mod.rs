@@ -6,6 +6,7 @@ use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::*;
 
 use gtk4::glib::*;
+use gtk4::traits::WidgetExt;
 
 use crate::data_helper::stox_get_main_info;
 
@@ -22,7 +23,7 @@ impl StoxDataGrid {
         return obj;
     }
 
-    pub fn update(&self, symbol: String, force_update: bool) {
+    pub fn update(&self, symbol: String, force_update: bool, is_saved: bool) {
         let symbol_label = self.imp().symbol_label.borrow();
 
         if !force_update && symbol_label.label() == symbol {
@@ -30,6 +31,14 @@ impl StoxDataGrid {
         }
 
         symbol_label.set_label(&symbol);
+
+        if is_saved {
+            self.imp().save_btn.borrow().hide();
+            self.imp().unsave_btn.borrow().show();
+        } else {
+            self.imp().save_btn.borrow().show();
+            self.imp().unsave_btn.borrow().hide();
+        }
 
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
