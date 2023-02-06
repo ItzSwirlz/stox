@@ -56,6 +56,10 @@ fn build_ui(app: &Application) {
     let css_provider = CssProvider::new();
     css_provider.load_from_data(
         "
+            #sidebar_symbol_label {
+                font-size: 23px;
+            }
+
             #symbol {
                 font-weight: bold;
                 font-size: 50px;

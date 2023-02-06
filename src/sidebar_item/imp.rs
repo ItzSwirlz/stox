@@ -99,6 +99,7 @@ impl ObjectImpl for StoxSidebarItem {
             let symbol_label = Label::builder()
                 .halign(Align::Start)
                 .label(symbol.as_str())
+                .name("sidebar_symbol_label")
                 .build();
 
             symbol_label.show();
