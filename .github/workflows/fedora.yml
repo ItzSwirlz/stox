@@ -1,0 +1,28 @@
+name: Fedora
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+      options: --privileged -it
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: dnf upgrade && dnf install gtk4-devel rust cargo rust-gtk4-devel meson ninja-build gettext -y
+    - name: Build
+      run: meson build && ninja -C build
+#    - name: Run tests
+#      run: cargo test --verbose
+# tests definitely wont work right now

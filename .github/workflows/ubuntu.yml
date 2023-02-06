@@ -1,0 +1,25 @@
+name: Ubuntu
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install dependencies
+      run: sudo apt update && sudo apt install libgtk-4-dev librust-gtk4-sys-dev meson ninja-build gettext -y
+    - name: Build
+      run: meson build && ninja -C build
+#    - name: Run tests
+#      run: cargo test --verbose
+# tests definitely wont work right now
