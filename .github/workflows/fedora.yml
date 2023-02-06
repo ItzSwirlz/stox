@@ -20,7 +20,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     - name: Install dependencies
-      run: dnf upgrade && dnf install gtk4-devel rust cargo rust-gtk4-devel meson ninja-build gettext -y
+      run: dnf upgrade -y && dnf install gtk4-devel rust cargo rust-gtk4-devel meson ninja-build gettext -y
     - name: Build
       run: meson build && ninja -C build
 #    - name: Run tests
