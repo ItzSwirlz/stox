@@ -83,8 +83,8 @@ fn build_ui(app: &Application) {
     let searchbar = SearchEntry::builder()
         .focusable(true)
         .placeholder_text(&gettext("Search for a symbol..."))
+        .search_delay(250)
         .build();
-
     searchbar.show();
 
     let searchbar_row = ListBoxRow::builder()
