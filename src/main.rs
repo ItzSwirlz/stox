@@ -1,6 +1,7 @@
 mod config;
 mod data_helper;
 mod datagrid;
+mod dialogs;
 mod fs_persistence;
 mod sidebar_item;
 
@@ -86,6 +87,13 @@ fn build_ui(app: &Application) {
     );
 
     let b = Box::new(Orientation::Horizontal, 10);
+
+    let window = ApplicationWindow::builder()
+        .application(app)
+        .child(&b)
+        .title("Stox")
+        .default_height(800)
+        .build();
 
     let searchbar = SearchEntry::builder()
         .focusable(true)
@@ -200,9 +208,10 @@ fn build_ui(app: &Application) {
         .save_btn
         .borrow()
         .connect_clicked(clone!(
-            @strong datagrid, @weak sidebar, @weak sidebar_symbols, @weak saved_stocks =>
+            @strong datagrid, @weak sidebar, @weak sidebar_symbols, @weak saved_stocks, @weak window =>
             move |_| {
                 if error_loading_saved_stocks {
+                    dialogs::show_saving_unsaving_disabled_dialog(&window);
                     return;
                 }
 
@@ -210,6 +219,7 @@ fn build_ui(app: &Application) {
                 (*saved_stocks).borrow_mut().push(symbol.clone());
 
                 if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+                    dialogs::show_save_stock_failed_dialog(&window);
                     return;
                 }
 
@@ -230,8 +240,9 @@ fn build_ui(app: &Application) {
             }
         ));
     datagrid.borrow().imp().unsave_btn.borrow().connect_clicked(
-        clone!(@strong datagrid, @strong saved_stocks, @weak sidebar => move |_| {
+        clone!(@strong datagrid, @strong saved_stocks, @weak sidebar, @weak window => move |_| {
             if error_loading_saved_stocks {
+                dialogs::show_saving_unsaving_disabled_dialog(&window);
                 return;
             }
 
@@ -241,6 +252,7 @@ fn build_ui(app: &Application) {
             (*saved_stocks).borrow_mut().remove(index.unwrap());
 
             if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+                dialogs::show_unsave_stock_failed_dialog(&window);
                 return;
             }
 
@@ -278,27 +290,8 @@ fn build_ui(app: &Application) {
         }
     });
 
-    let window = ApplicationWindow::builder()
-        .application(app)
-        .child(&b)
-        .title("Stox")
-        .default_height(800)
-        .build();
-
-    let error_dialog = MessageDialog::builder()
-        .transient_for(&window)
-        .modal(true)
-        .buttons(ButtonsType::Ok)
-        .text("Error")
-        .secondary_text(concat!(
-            "The saved stocks could not be loaded. Try restaring the app.\n",
-            "\nTo prevent data loss, saving/unsaving stocks will be disabled until this is fixed."
-        ))
-        .message_type(MessageType::Error)
-        .build();
-
     if error_loading_saved_stocks {
-        error_dialog.run_async(|obj, _| obj.close());
+        dialogs::show_load_saved_stocks_failed_dialog(&window);
     }
 
     let header_bar = HeaderBar::new();
