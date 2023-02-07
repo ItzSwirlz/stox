@@ -23,7 +23,7 @@ use gtk4::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::sync::*;
+use std::{sync::*, panic};
 
 const APP_ID: &str = "org.github.ItzSwirlz.stox";
 
@@ -130,7 +130,7 @@ fn build_ui(app: &Application) {
     searchbar.connect_search_changed(clone!(@weak debounce_source_id => move |search| {
         let mut debounce_source_id = debounce_source_id.lock().unwrap();
         if let Some(debounce_source_id) = debounce_source_id.take() {
-            debounce_source_id.remove();
+            panic::catch_unwind(|| debounce_source_id.remove()).ok();
         }
 
         let query = search.text().to_string();
