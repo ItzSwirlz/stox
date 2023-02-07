@@ -13,6 +13,8 @@ use sidebar_item::StoxSidebarItem;
 use gettextrs::*;
 
 use glib::subclass::types::ObjectSubclassIsExt;
+use glib::SourceId;
+
 use gtk4::gdk::Display;
 use gtk4::glib::clone;
 use gtk4::prelude::*;
@@ -88,7 +90,6 @@ fn build_ui(app: &Application) {
     let searchbar = SearchEntry::builder()
         .focusable(true)
         .placeholder_text(&gettext("Search for a symbol..."))
-        .search_delay(250)
         .build();
     searchbar.show();
 
@@ -114,35 +115,60 @@ fn build_ui(app: &Application) {
         sidebar_symbols.lock().unwrap().push(sidebar_item);
     }
 
-    searchbar.connect_search_changed(clone!(@weak sidebar, @weak saved_stocks => move |search| {
-        let search_text = search.text().to_string();
+    let (debounce_sender, debounce_receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
 
-        sidebar_symbols.lock().unwrap().retain(|item| {
-            let symbol = item.property::<String>("symbol");
-            let is_searched = item.property::<bool>("searched");
+    let debounce_source_id = Arc::new(Mutex::new(None::<SourceId>));
 
-            if search_text.is_empty() && !is_searched && (*saved_stocks.borrow()).contains(&symbol) {
-                item.show()
-            } else {
-                item.hide();
+    searchbar.connect_search_changed(clone!(@weak debounce_source_id => move |search| {
+        let mut debounce_source_id = debounce_source_id.lock().unwrap();
+        if let Some(debounce_source_id) = debounce_source_id.take() {
+            debounce_source_id.remove();
+        }
+
+        let query = search.text().to_string();
+
+        *debounce_source_id = Some(glib::timeout_add_local_once(
+            std::time::Duration::from_millis(250),
+            clone!(@strong debounce_sender => move || {
+                debounce_sender.send(query).unwrap();
+            }),
+        ));
+    }));
+
+    debounce_receiver.attach(
+        None,
+        clone!(@weak sidebar, @weak saved_stocks => @default-panic, move |query: String| {
+            *debounce_source_id.lock().unwrap() = None;
+
+            sidebar_symbols.lock().unwrap().retain(|item| {
+                let symbol = item.property::<String>("symbol");
+                let is_searched = item.property::<bool>("searched");
+
+                if query.is_empty() && !is_searched && (*saved_stocks.borrow()).contains(&symbol) {
+                    item.show()
+                } else {
+                    item.hide();
+                }
+
+                !is_searched
+            });
+
+            // Do not try to ping Yahoo with invalid characters.
+            if query.is_empty() || !query.is_ascii() {
+                return Continue(true)
             }
 
-            !is_searched
-        });
+            let quotes = stox_search_symbol(&query);
+            for i in quotes.iter() {
+                let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
+                sidebar_item.show();
+                sidebar.append(&sidebar_item);
+                sidebar_symbols.lock().unwrap().push(sidebar_item);
+            }
 
-        // Do not try to ping Yahoo with invalid characters.
-        if search_text.is_empty() || !search_text.is_ascii() {
-            return
-        }
-
-        let quotes = stox_search_symbol(&search.text().to_string());
-        for i in quotes.iter() {
-            let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
-            sidebar_item.show();
-            sidebar.append(&sidebar_item);
-            sidebar_symbols.lock().unwrap().push(sidebar_item);
-        }
-    }));
+            Continue(true)
+        }),
+    );
 
     let viewport = Viewport::builder()
         .child(&sidebar)
