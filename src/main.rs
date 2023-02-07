@@ -137,37 +137,42 @@ fn build_ui(app: &Application) {
 
     debounce_receiver.attach(
         None,
-        clone!(@weak sidebar, @weak saved_stocks => @default-panic, move |query: String| {
-            *debounce_source_id.lock().unwrap() = None;
+        clone!(
+            @strong sidebar_symbols, @weak sidebar, @weak saved_stocks => @default-panic,
+            move |query: String| {
+                *debounce_source_id.lock().unwrap() = None;
 
-            sidebar_symbols.lock().unwrap().retain(|item| {
-                let symbol = item.property::<String>("symbol");
-                let is_searched = item.property::<bool>("searched");
+                sidebar_symbols.lock().unwrap().retain(|item| {
+                    let symbol = item.property::<String>("symbol");
+                    let is_searched = item.property::<bool>("searched");
 
-                if query.is_empty() && !is_searched && (*saved_stocks.borrow()).contains(&symbol) {
-                    item.show()
-                } else {
-                    item.hide();
+                    let is_saved = (*saved_stocks.borrow()).contains(&symbol);
+
+                    if query.is_empty() && !is_searched && is_saved {
+                        item.show()
+                    } else {
+                        item.hide();
+                    }
+
+                    !is_searched
+                });
+
+                // Do not try to ping Yahoo with invalid characters.
+                if query.is_empty() || !query.is_ascii() {
+                    return Continue(true)
                 }
 
-                !is_searched
-            });
+                let quotes = stox_search_symbol(&query);
+                for i in quotes.iter() {
+                    let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
+                    sidebar_item.show();
+                    sidebar.append(&sidebar_item);
+                    sidebar_symbols.lock().unwrap().push(sidebar_item);
+                }
 
-            // Do not try to ping Yahoo with invalid characters.
-            if query.is_empty() || !query.is_ascii() {
-                return Continue(true)
+                Continue(true)
             }
-
-            let quotes = stox_search_symbol(&query);
-            for i in quotes.iter() {
-                let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
-                sidebar_item.show();
-                sidebar.append(&sidebar_item);
-                sidebar_symbols.lock().unwrap().push(sidebar_item);
-            }
-
-            Continue(true)
-        }),
+        ),
     );
 
     let viewport = Viewport::builder()
@@ -189,25 +194,43 @@ fn build_ui(app: &Application) {
     b.append(&scroll_window);
 
     let datagrid = RefCell::new(StoxDataGrid::new());
-    datagrid.borrow().imp().save_btn.borrow().connect_clicked(
-        clone!(@strong datagrid, @weak saved_stocks => move |_| {
-            if error_loading_saved_stocks {
-                return;
+    datagrid
+        .borrow()
+        .imp()
+        .save_btn
+        .borrow()
+        .connect_clicked(clone!(
+            @strong datagrid, @weak sidebar, @weak sidebar_symbols, @weak saved_stocks =>
+            move |_| {
+                if error_loading_saved_stocks {
+                    return;
+                }
+
+                let symbol = datagrid.borrow().imp().symbol_label.borrow().label().to_string();
+                (*saved_stocks).borrow_mut().push(symbol.clone());
+
+                if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+                    return;
+                }
+
+                datagrid.borrow().imp().save_btn.borrow().hide();
+                datagrid.borrow().imp().unsave_btn.borrow().show();
+
+                let sidebar_item = StoxSidebarItem::new(&symbol, false);
+                sidebar.append(&sidebar_item);
+
+                if searchbar.text().to_string().is_empty() {
+                    sidebar_item.show();
+                    sidebar_item.activate();
+                } else {
+                    sidebar_item.hide();
+                }
+
+                sidebar_symbols.lock().unwrap().push(sidebar_item);
             }
-
-            let symbol = datagrid.borrow().imp().symbol_label.borrow().label().to_string();
-            (*saved_stocks).borrow_mut().push(symbol);
-
-            if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
-                return;
-            }
-
-            datagrid.borrow().imp().save_btn.borrow().hide();
-            datagrid.borrow().imp().unsave_btn.borrow().show();
-        }),
-    );
+        ));
     datagrid.borrow().imp().unsave_btn.borrow().connect_clicked(
-        clone!(@strong datagrid, @weak sidebar, @weak saved_stocks => move |_| {
+        clone!(@strong datagrid, @strong saved_stocks, @weak sidebar => move |_| {
             if error_loading_saved_stocks {
                 return;
             }
@@ -225,18 +248,14 @@ fn build_ui(app: &Application) {
             datagrid.borrow().imp().unsave_btn.borrow().hide();
 
             let mut child = sidebar.first_child().unwrap().next_sibling().unwrap();
-            while child.property::<String>("symbol") != symbol {
+            while child.property::<String>("symbol") != symbol || child.property("searched") {
                 match child.next_sibling() {
                     Some(next_child) => child = next_child,
                     None => break
                 }
             }
 
-            if child.property("searched") {
-                return;
-            }
-
-            child.hide();
+            sidebar.remove(&child);
         }),
     );
 
