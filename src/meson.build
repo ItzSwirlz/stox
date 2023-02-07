@@ -1,4 +1,5 @@
 global_conf = configuration_data()
+global_conf.set_quoted('PKGDATADIR', pkgdatadir)
 global_conf.set_quoted('GETTEXT_PACKAGE', gettext_package)
 global_conf.set_quoted('LOCALEDIR', localedir)
 config = configure_file(
@@ -35,6 +36,7 @@ cargo_build = custom_target(
     install: true,
     install_dir: bindir,
     output: meson.project_name(),
+    depends: resources,
     command: [
         'env',
         cargo_env,

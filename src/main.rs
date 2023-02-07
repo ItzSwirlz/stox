@@ -25,7 +25,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::{sync::*, panic};
 
-const APP_ID: &str = "org.github.ItzSwirlz.stox";
+const APP_ID: &str = "org.itzswirlz.stox";
 
 fn main() {
     setlocale(LocaleCategory::LcAll, "");
@@ -34,6 +34,11 @@ fn main() {
     bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8").unwrap();
     textdomain(GETTEXT_PACKAGE)
         .unwrap_or_else(|_| panic!("Unable to switch to text domain {}", GETTEXT_PACKAGE));
+
+    // Register and include resources
+    // Taken from gnome-tour
+    let res = gio::Resource::load(config::RESOURCES_FILE).expect("Could not load resources");
+    gio::resources_register(&res);
 
     // Create a new application
     let app = Application::builder().application_id(APP_ID).build();

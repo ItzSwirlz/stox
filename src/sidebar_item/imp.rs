@@ -1,4 +1,3 @@
-use std::cell::Cell;
 use std::cell::RefCell;
 
 use gtk4::glib::subclass::types::ObjectSubclass;
@@ -11,13 +10,17 @@ use once_cell::sync::Lazy;
 
 use crate::data_helper::stox_get_main_info;
 
-#[derive(Default)]
+#[derive(Default, CompositeTemplate)]
+#[template(resource = "/org/itzswirlz/stox/resources/ui/stoxsidebaritem.ui")]
 pub struct StoxSidebarItem {
-    child: RefCell<Option<gtk4::Widget>>,
+    #[template_child]
+    symbol_label: TemplateChild<Label>,
     symbol: RefCell<String>,
     searched: RefCell<bool>,
-    desc_label: Cell<Label>,
-    quote_label: Cell<Label>,
+    #[template_child]
+    desc_label: TemplateChild<Label>,
+    #[template_child]
+    quote_label: TemplateChild<Label>,
 }
 
 #[glib::object_subclass]
@@ -25,6 +28,14 @@ impl ObjectSubclass for StoxSidebarItem {
     const NAME: &'static str = "StoxSidebarItem";
     type Type = super::StoxSidebarItem;
     type ParentType = gtk4::ListBoxRow;
+
+    fn class_init(klass: &mut Self::Class) {
+        Self::bind_template(klass);
+    }
+    
+    fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
+        obj.init_template();
+    }
 }
 
 impl ObjectImpl for StoxSidebarItem {
@@ -68,66 +79,16 @@ impl ObjectImpl for StoxSidebarItem {
         self.parent_constructed();
         let obj = self.obj();
         obj.set_height_request(100);
+        obj.set_width_request(325);
         obj.set_focusable(true);
         obj.set_visible(true);
 
-        let quote_label = Label::builder()
-            .halign(Align::End)
-            .justify(Justification::Right)
-            .label("--.--") // placeholder until pinged
-            .build();
-
-        let quote_box = Box::builder()
-            .orientation(Orientation::Vertical)
-            .valign(Align::Start)
-            .build();
-
-        quote_box.append(&quote_label);
-        quote_box.show();
-
-        let desc = Label::builder()
-            .halign(Align::Start)
-            .label("--.--") // placeholder until pinged
-            .build();
-
-        desc.show(); // we won't let the UI wait for the yahoo ping
-
-        let symbol = self.symbol.borrow();
-
-        // Sometimes an empty string value can be initialized, ignore it
-        if symbol.len() != 0 {
-            let symbol_label = Label::builder()
-                .halign(Align::Start)
-                .label(symbol.as_str())
-                .name("sidebar_symbol_label")
-                .build();
-
-            symbol_label.show();
-
-            let grid = Grid::builder()
-                .margin_start(10)
-                .margin_end(10)
-                .margin_top(10)
-                .margin_bottom(10)
-                .column_homogeneous(true)
-                .hexpand(true)
-                .build();
-
-            grid.set_parent(&*obj);
-            grid.attach(&symbol_label, 0, 0, 100, 100);
-            grid.attach(&quote_box, 0, 0, 100, 100);
-            grid.attach_next_to(&desc, Some(&symbol_label), PositionType::Bottom, 100, 100);
-            obj.set_child_visible(true);
-            *self.child.borrow_mut() = Some(grid.upcast::<gtk4::Widget>());
-
-            StoxSidebarItem::start_ticking(self, symbol.to_string(), desc, quote_label);
-        }
-    }
-
-    fn dispose(&self) {
-        self.child.take().unwrap().unparent()
+        self.symbol_label.get().set_label(&self.symbol.borrow());
+        self.start_ticking(self.symbol.borrow().to_string(), self.desc_label.get(), self.quote_label.get());
     }
 }
+
+impl BuildableImpl for StoxSidebarItem {}
 
 impl ListBoxRowImpl for StoxSidebarItem {}
 
