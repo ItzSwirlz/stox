@@ -121,7 +121,9 @@ pub fn stox_get_quotes(symbol: String) -> Vec<String> {
                 .unwrap()
                 .day()
                 .to_string();
-            axis.push(day + "," + &quote.to_string()); // Align day with quote, for now assume we are on one-day quotes
+
+            // Align day with quote, for now assume we are on one-day quotes
+            axis.push(day + "," + &quote.to_string());
         }
     }
     return axis;

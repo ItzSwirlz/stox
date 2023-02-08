@@ -23,7 +23,7 @@ use gtk4::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::{sync::*, panic};
+use std::{panic, sync::*};
 
 const APP_ID: &str = "org.itzswirlz.stox";
 
@@ -64,10 +64,6 @@ fn build_ui(app: &Application) {
     let css_provider = CssProvider::new();
     css_provider.load_from_data(
         "
-            #sidebar_symbol_label {
-                font-size: 23px;
-            }
-
             #symbol {
                 font-weight: bold;
                 font-size: 50px;

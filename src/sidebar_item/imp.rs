@@ -15,12 +15,12 @@ use crate::data_helper::stox_get_main_info;
 pub struct StoxSidebarItem {
     #[template_child]
     symbol_label: TemplateChild<Label>,
-    symbol: RefCell<String>,
-    searched: RefCell<bool>,
     #[template_child]
     desc_label: TemplateChild<Label>,
     #[template_child]
     quote_label: TemplateChild<Label>,
+    symbol: RefCell<String>,
+    searched: RefCell<bool>,
 }
 
 #[glib::object_subclass]
@@ -32,7 +32,7 @@ impl ObjectSubclass for StoxSidebarItem {
     fn class_init(klass: &mut Self::Class) {
         Self::bind_template(klass);
     }
-    
+
     fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
         obj.init_template();
     }
@@ -77,6 +77,7 @@ impl ObjectImpl for StoxSidebarItem {
 
     fn constructed(&self) {
         self.parent_constructed();
+
         let obj = self.obj();
         obj.set_height_request(100);
         obj.set_width_request(325);
@@ -84,7 +85,11 @@ impl ObjectImpl for StoxSidebarItem {
         obj.set_visible(true);
 
         self.symbol_label.get().set_label(&self.symbol.borrow());
-        self.start_ticking(self.symbol.borrow().to_string(), self.desc_label.get(), self.quote_label.get());
+        self.start_ticking(
+            self.symbol.borrow().to_string(),
+            self.desc_label.get(),
+            self.quote_label.get(),
+        );
     }
 }
 
