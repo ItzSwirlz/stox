@@ -18,7 +18,7 @@ pub struct StoxDataGrid {
     pub latest_quote: RefCell<Label>,
     pub save_btn: RefCell<Button>,
     pub unsave_btn: RefCell<Button>,
-    pub notebook: RefCell<Notebook>
+    pub notebook: RefCell<Notebook>,
 }
 
 #[glib::object_subclass]
@@ -188,7 +188,9 @@ impl StoxDataGrid {
         let x_axis = stox_get_chart_x_axis(symbol, "1d");
 
         let drawing_area = DrawingArea::new();
-        self.notebook.take().append_page(&drawing_area, Some(&Label::new(Some("1D"))));
+        self.notebook
+            .take()
+            .append_page(&drawing_area, Some(&Label::new(Some("1D"))));
         drawing_area.set_draw_func(move |drawing_area, cr, width, height| {
             let mut x_iter = x_axis.iter();
             cr.set_source_rgb(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0); // Background color
@@ -200,11 +202,10 @@ impl StoxDataGrid {
                 cr.move_to(x_grid_line as f64, height as f64 - 20 as f64);
                 cr.line_to(x_grid_line as f64, (-1 * height) as f64);
                 cr.stroke();
-                
+
                 cr.move_to(x_grid_line as f64 - 2.0, height as f64);
                 cr.show_text(x_iter.next().unwrap());
             }
-
         });
         drawing_area.show();
     }

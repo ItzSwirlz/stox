@@ -99,7 +99,7 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
             }
         }
     }
-    axis.dedup();  // remove duplicates
+    axis.dedup(); // remove duplicates
     return axis;
 }
 

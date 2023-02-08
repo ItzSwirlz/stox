@@ -292,6 +292,7 @@ fn build_ui(app: &Application) {
             ) {
                 if let Some(previous_row) = previous_row.borrow().clone() {
                     sidebar.select_row(Some(&previous_row));
+                    previous_row.activate();
                 }
             } else {
                 *previous_row.borrow_mut() = Some((*row).clone());
