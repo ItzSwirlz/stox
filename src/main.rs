@@ -274,7 +274,9 @@ fn build_ui(app: &Application) {
 
     b.append(&*datagrid.borrow());
 
-    sidebar.connect_row_selected(move |_, row| {
+    let previous_row: RefCell<Option<ListBoxRow>> = RefCell::new(None);
+
+    sidebar.connect_row_selected(move |sidebar, row| {
         if let Some(row) = row {
             if row.widget_name() != "StoxSidebarItem" {
                 return;
@@ -283,11 +285,17 @@ fn build_ui(app: &Application) {
             let symbol = row.property::<String>("symbol");
             let symbol = symbol.as_str();
 
-            datagrid.borrow().update(
+            if datagrid.borrow().update(
                 symbol.to_string(),
                 false,
                 (*saved_stocks).borrow().contains(&symbol.to_string()),
-            );
+            ) {
+                if let Some(previous_row) = previous_row.borrow().clone() {
+                    sidebar.select_row(Some(&previous_row));
+                }
+            } else {
+                *previous_row.borrow_mut() = Some((*row).clone());
+            }
         }
     });
 

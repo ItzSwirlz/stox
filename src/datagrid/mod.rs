@@ -1,12 +1,15 @@
 mod imp;
 
 use std::cell::RefCell;
+use std::sync::{Arc, Mutex};
 
 use glib::subclass::types::ObjectSubclassIsExt;
 use gtk4::*;
 
 use gtk4::glib::*;
 use gtk4::traits::WidgetExt;
+
+use lazy_static::lazy_static;
 
 use crate::data_helper::stox_get_main_info;
 
@@ -16,6 +19,10 @@ glib::wrapper! {
         @implements Actionable, Accessible, Buildable, ConstraintTarget;
 }
 
+lazy_static! {
+    static ref UPDATE_LOCK: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
+}
+
 impl StoxDataGrid {
     pub fn new() -> Self {
         let obj: StoxDataGrid = Object::builder().build();
@@ -23,11 +30,17 @@ impl StoxDataGrid {
         return obj;
     }
 
-    pub fn update(&self, symbol: String, force_update: bool, is_saved: bool) {
+    pub fn update(&self, symbol: String, force_update: bool, is_saved: bool) -> bool {
+        let lock = UPDATE_LOCK.try_lock();
+        if lock.is_err() {
+            return true;
+        }
+        let lock = lock.unwrap();
+
         let symbol_label = self.imp().symbol_label.borrow();
 
         if !force_update && symbol_label.label() == symbol {
-            return;
+            return false;
         }
 
         symbol_label.set_label(&symbol);
@@ -59,9 +72,13 @@ impl StoxDataGrid {
             latest_quote.set_label(&last_quote);
             name_label.set_label(&short_name);
 
+            drop(lock.clone());
+
             Continue(false)
         });
 
         self.imp().construct_graph();
+
+        return false;
     }
 }
