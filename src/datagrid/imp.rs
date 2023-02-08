@@ -1,10 +1,13 @@
 use std::cell::RefCell;
 
+use gtk4::builders::DrawingAreaBuilder;
 use gtk4::glib::subclass::types::ObjectSubclass;
 use gtk4::glib::*;
 use gtk4::prelude::*;
 use gtk4::subclass::prelude::*;
 use gtk4::*;
+
+use crate::data_helper::*;
 
 use once_cell::sync::Lazy;
 
@@ -15,6 +18,7 @@ pub struct StoxDataGrid {
     pub latest_quote: RefCell<Label>,
     pub save_btn: RefCell<Button>,
     pub unsave_btn: RefCell<Button>,
+    pub notebook: RefCell<Notebook>
 }
 
 #[glib::object_subclass]
@@ -170,6 +174,7 @@ impl ObjectImpl for StoxDataGrid {
         *self.symbol_label.borrow_mut() = symbol_label;
         *self.name_label.borrow_mut() = name;
         *self.latest_quote.borrow_mut() = latest_quote;
+        *self.notebook.borrow_mut() = notebook;
     }
 }
 
@@ -177,4 +182,30 @@ impl BoxImpl for StoxDataGrid {}
 
 impl WidgetImpl for StoxDataGrid {}
 
-impl StoxDataGrid {}
+impl StoxDataGrid {
+    pub fn construct_graph(&self) {
+        let symbol = self.symbol_label.borrow().text().to_string();
+        let x_axis = stox_get_chart_x_axis(symbol, "1d");
+
+        let drawing_area = DrawingArea::new();
+        self.notebook.take().append_page(&drawing_area, Some(&Label::new(Some("1D"))));
+        drawing_area.set_draw_func(move |drawing_area, cr, width, height| {
+            let mut x_iter = x_axis.iter();
+            cr.set_source_rgb(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0); // Background color
+            cr.paint().unwrap();
+            cr.set_line_width(1.0);
+
+            cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0); // Set the grid lines color
+            for x_grid_line in (0..(width)).step_by(30) {
+                cr.move_to(x_grid_line as f64, height as f64 - 20 as f64);
+                cr.line_to(x_grid_line as f64, (-1 * height) as f64);
+                cr.stroke();
+                
+                cr.move_to(x_grid_line as f64 - 2.0, height as f64);
+                cr.show_text(x_iter.next().unwrap());
+            }
+
+        });
+        drawing_area.show();
+    }
+}

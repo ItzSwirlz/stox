@@ -61,5 +61,7 @@ impl StoxDataGrid {
 
             Continue(false)
         });
+
+        self.imp().construct_graph();
     }
 }

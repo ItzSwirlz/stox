@@ -44,29 +44,23 @@ pub fn stox_get_ranges(symbol: String) -> Vec<String> {
     valid_ranges.to_vec()
 }
 
-pub fn stox_get_chart_x_axis(symbol: String) -> Vec<String> {
+pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
     let provider = YahooConnector::new();
-    let response = provider.get_latest_quotes(&symbol, "30m").unwrap();
+    let response = provider.get_latest_quotes(&symbol, "1h").unwrap();
     let mut axis: Vec<String> = vec![];
     for index in response.chart.result.into_iter() {
-        let range = index.meta.range; // (1d, 60m, etc.) indicators
         for timestamp in index.timestamp {
             // The x-axis should show different things depending on the range.
             // For example, in the span of one day, we should show the time
             // instead of the day.
-            match range.as_str() {
+            match range {
                 "1d" => {
                     let mut hour = Utc
                         .timestamp_opt(timestamp as i64, 0)
                         .unwrap()
                         .hour()
                         .to_string();
-                    let min = Utc
-                        .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
-                        .minute()
-                        .to_string();
-                    hour.push_str(&(":".to_string() + &min.to_string())); // the hour is now our total time
+                    hour.push_str(&(":".to_string() + "00")); // the hour is now our total time
                     axis.push(hour.to_string());
                 }
                 "5d" | "1wk" | "1mo" => {
@@ -105,6 +99,7 @@ pub fn stox_get_chart_x_axis(symbol: String) -> Vec<String> {
             }
         }
     }
+    axis.dedup();  // remove duplicates
     return axis;
 }
 
