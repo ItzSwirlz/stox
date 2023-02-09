@@ -58,7 +58,7 @@ impl StoxDataGrid {
         let symbol = RefCell::new(symbol);
 
         std::thread::spawn(move || match stox_get_main_info(&*symbol.borrow()) {
-            Ok(main_info) => sender.send(main_info).unwrap(),
+            Ok(main_info) => sender.send((main_info.0, main_info.1)).unwrap(),
             Err(_) => sender.send(("???".to_string(), "???".to_string())).unwrap(),
         });
 

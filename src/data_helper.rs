@@ -11,24 +11,27 @@ pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {
     provider.search_ticker(symbol).unwrap().quotes
 }
 
-pub fn stox_get_main_info(symbol: &str) -> Result<(String, String)> {
+pub fn stox_get_main_info(symbol: &str) -> Result<(String, String, String)> {
     let provider = yahoo::YahooConnector::new();
     let latest_quotes = provider.get_latest_quotes(symbol, "1h")?;
 
     let last_quote = latest_quotes.last_quote()?.close;
+
     let last_quote = (last_quote * 100.0).trunc() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
     let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
 
-    let currency = &latest_quotes.chart.result[0].meta.currency.to_uppercase();
+    let meta = &latest_quotes.chart.result[0].meta;
+    let currency = meta.currency.to_uppercase();
+    let instrument_type = (&meta.instrument_type).to_string();
 
     match iso::find(&currency) {
         Some(currency) => {
             let last_quote = Money::from_decimal(last_quote, currency).to_string();
-            Ok((last_quote, short_name.clone()))
+            Ok((last_quote, short_name.clone(), instrument_type))
         }
-        None => Ok((last_quote.to_string(), short_name.clone())),
+        None => Ok((last_quote.to_string(), short_name.clone(), instrument_type)),
     }
 }
 
