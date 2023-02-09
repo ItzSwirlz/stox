@@ -89,6 +89,7 @@ impl ObjectImpl for StoxSidebarItem {
             self.symbol.borrow().to_string(),
             self.desc_label.get(),
             self.quote_label.get(),
+            self.symbol_label.get(),
         );
     }
 }
@@ -100,7 +101,7 @@ impl ListBoxRowImpl for StoxSidebarItem {}
 impl WidgetImpl for StoxSidebarItem {}
 
 impl StoxSidebarItem {
-    pub fn start_ticking(&self, symbol: String, desc_label: Label, quote_label: Label) {
+    pub fn start_ticking(&self, symbol: String, desc_label: Label, quote_label: Label, symbol_label: Label) {
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
         std::thread::spawn(move || match stox_get_main_info(symbol.as_str()) {
@@ -111,6 +112,9 @@ impl StoxSidebarItem {
         receiver.attach(None, move |(last_quote, short_name)| {
             quote_label.set_text(&last_quote.to_string());
             desc_label.set_text(&short_name.to_string());
+            if short_name.contains("Future") {
+                symbol_label.set_markup(String::from("<span foreground=\"#2ec27e\">".to_owned() + &symbol_label.text().to_string() + "</span>").as_str());
+            }
             Continue(true)
         });
     }
