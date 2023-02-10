@@ -1,7 +1,10 @@
 use anyhow::Result;
 use chrono::prelude::*;
+use glib::ffi::g_variant_get_child;
+use reqwest::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
+use serde_json::*;
 use yahoo::YahooConnector;
 use yahoo::*;
 use yahoo_finance_api as yahoo;
@@ -104,6 +107,35 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
     }
     axis.dedup(); // remove duplicates
     return axis;
+}
+
+// Currently the yahoo finance api crate doesn't have support for getting market day ranges
+pub fn stox_get_chart_y_axis(symbol: String) -> Vec<f64> {
+    let body = reqwest::blocking::get(format!(
+        "https://query1.finance.yahoo.com/v7/finance/options/{}",
+        symbol
+    ))
+    .unwrap()
+    .text()
+    .unwrap();
+    let json_res: Value = serde_json::from_str(&body).unwrap();
+    let range = json_res["optionChain"]["result"][0]["quote"]["regularMarketDayRange"].to_string();
+
+    // We have our range, but we need to make it a vec of points.
+    let i = range.trim().replace("\"", "");
+    let i2: Vec<&str> = i.split(" - ").collect();
+    let start: f64 = i2[0].parse().unwrap();
+    let end: f64 = i2[1].parse().unwrap();
+    let step_part1 = (start + end) / 2.0;
+    let step = (step_part1 - start) / 2.0;
+
+    let mut y_axis: Vec<f64> = vec![];
+    y_axis.push(start);
+    y_axis.push(start + step);
+    y_axis.push(step_part1);
+    y_axis.push(step_part1 + step);
+    y_axis.push(end);
+    y_axis
 }
 
 pub fn stox_get_quotes(symbol: String) -> Vec<String> {

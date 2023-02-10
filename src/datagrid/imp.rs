@@ -185,7 +185,8 @@ impl WidgetImpl for StoxDataGrid {}
 impl StoxDataGrid {
     pub fn construct_graph(&self) {
         let symbol = self.symbol_label.borrow().text().to_string();
-        let x_axis = stox_get_chart_x_axis(symbol, "1d");
+        let x_axis = stox_get_chart_x_axis(symbol.clone(), "1d");
+        let y_axis = stox_get_chart_y_axis(symbol);
 
         let drawing_area = DrawingArea::new();
         self.notebook
@@ -193,18 +194,39 @@ impl StoxDataGrid {
             .append_page(&drawing_area, Some(&Label::new(Some("1D"))));
         drawing_area.set_draw_func(move |drawing_area, cr, width, height| {
             let mut x_iter = x_axis.iter();
+            let mut y_iter = y_axis.iter();
             cr.set_source_rgb(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0); // Background color
             cr.paint().unwrap();
             cr.set_line_width(1.0);
 
             cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0); // Set the grid lines color
-            for x_grid_line in (0..(width)).step_by(30) {
-                cr.move_to(x_grid_line as f64, height as f64 - 20 as f64);
+            let mut x_points: Vec<i32> = vec![];
+            let mut y_points: Vec<i32> = vec![];
+            for x_grid_line in (0..(width)).step_by(width as usize / 8 as usize) {
+                cr.move_to(x_grid_line as f64, height as f64 - 20.0);
                 cr.line_to(x_grid_line as f64, (-1 * height) as f64);
-                cr.stroke();
+                cr.stroke().unwrap();
+                x_points.push(x_grid_line);
 
-                cr.move_to(x_grid_line as f64 - 2.0, height as f64);
-                cr.show_text(x_iter.next().unwrap());
+                cr.move_to(x_grid_line as f64 - 2.0, height as f64 - 5.0);
+                cr.show_text(x_iter.next().unwrap()).unwrap();
+            }
+
+            for y_grid_line in (0..(height)).step_by(height as usize / 4 as usize) {
+                cr.move_to(0.0, y_grid_line as f64);
+                cr.line_to(width as f64, y_grid_line as f64);
+                cr.stroke().unwrap();
+                y_points.push(y_grid_line);
+
+                cr.move_to(2.0, y_grid_line as f64);
+                cr.show_text(&*y_iter.next().unwrap().to_string());
+            }
+
+            for (i, j) in x_points.iter().zip(y_points.clone()) {
+                cr.move_to(*i as f64 + width as f64, j as f64);
+                println!("{} {}", i, j);
+                cr.line_to(0.0, 0.0); // temporary  testing
+                cr.stroke();
             }
         });
         drawing_area.show();
