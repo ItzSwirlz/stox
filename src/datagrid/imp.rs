@@ -185,13 +185,25 @@ impl WidgetImpl for StoxDataGrid {}
 impl StoxDataGrid {
     pub fn construct_graph(&self) {
         let symbol = self.symbol_label.borrow().text().to_string();
+
         let x_axis = stox_get_chart_x_axis(symbol.clone(), "1d");
+        if !x_axis.is_ok() {
+            return;
+        }
+        let x_axis = x_axis.unwrap();
+
         let y_axis = stox_get_chart_y_axis(symbol);
+        if !y_axis.is_ok() {
+            return;
+        }
+        let y_axis = y_axis.unwrap();
 
         let drawing_area = DrawingArea::new();
+
         self.notebook
             .take()
             .append_page(&drawing_area, Some(&Label::new(Some("1D"))));
+
         drawing_area.set_draw_func(move |drawing_area, cr, width, height| {
             let mut x_iter = x_axis.iter();
             let mut y_iter = y_axis.iter();
@@ -229,6 +241,7 @@ impl StoxDataGrid {
                 cr.stroke();
             }
         });
+
         drawing_area.show();
     }
 }

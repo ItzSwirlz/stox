@@ -1,7 +1,5 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use chrono::prelude::*;
-use glib::ffi::g_variant_get_child;
-use reqwest::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
 use serde_json::*;
@@ -50,9 +48,9 @@ pub fn stox_get_ranges(symbol: String) -> Vec<String> {
     valid_ranges.to_vec()
 }
 
-pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
+pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>, anyhow::Error> {
     let provider = YahooConnector::new();
-    let response = provider.get_latest_quotes(&symbol, "1h").unwrap();
+    let response = provider.get_latest_quotes(&symbol, "1h")?;
     let mut axis: Vec<String> = vec![];
     for index in response.chart.result.into_iter() {
         for timestamp in index.timestamp {
@@ -63,7 +61,8 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
                 "1d" => {
                     let mut hour = Utc
                         .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
+                        .single()
+                        .context("expected timestamp")?
                         .hour()
                         .to_string();
                     hour.push_str(&(":".to_string() + "00")); // the hour is now our total time
@@ -72,12 +71,14 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
                 "5d" | "1wk" | "1mo" => {
                     let mut day = Utc
                         .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
+                        .single()
+                        .context("expected timestamp")?
                         .day()
                         .to_string();
                     let month = Utc
                         .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
+                        .single()
+                        .context("expected timestamp")?
                         .month()
                         .to_string();
                     day.push_str(&("/".to_string() + &month.to_string()));
@@ -86,7 +87,8 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
                 "3mo" | "6mo" | "1y" | "2y" => {
                     let month = Utc
                         .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
+                        .single()
+                        .context("expected timestamp")?
                         .month()
                         .to_string();
                     axis.push(month.to_string());
@@ -94,7 +96,8 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
                 "5y" | "10y" | "ytd" | "max" => {
                     let year = Utc
                         .timestamp_opt(timestamp as i64, 0)
-                        .unwrap()
+                        .single()
+                        .context("expected timestamp")?
                         .year()
                         .to_string();
                     axis.push(year.to_string());
@@ -106,36 +109,35 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Vec<String> {
         }
     }
     axis.dedup(); // remove duplicates
-    return axis;
+    return Ok(axis);
 }
 
 // Currently the yahoo finance api crate doesn't have support for getting market day ranges
-pub fn stox_get_chart_y_axis(symbol: String) -> Vec<f64> {
+pub fn stox_get_chart_y_axis(symbol: String) -> Result<Vec<f64>, anyhow::Error> {
     let body = reqwest::blocking::get(format!(
         "https://query1.finance.yahoo.com/v7/finance/options/{}",
         symbol
-    ))
-    .unwrap()
-    .text()
-    .unwrap();
-    let json_res: Value = serde_json::from_str(&body).unwrap();
+    ))?
+    .text()?;
+
+    let json_res: Value = serde_json::from_str(&body)?;
     let range = json_res["optionChain"]["result"][0]["quote"]["regularMarketDayRange"].to_string();
 
     // We have our range, but we need to make it a vec of points.
     let i = range.trim().replace("\"", "");
     let i2: Vec<&str> = i.split(" - ").collect();
-    let start: f64 = i2[0].parse().unwrap();
-    let end: f64 = i2[1].parse().unwrap();
+    let start: f64 = i2[0].parse()?;
+    let end: f64 = i2[1].parse()?;
     let step_part1 = (start + end) / 2.0;
     let step = (step_part1 - start) / 2.0;
 
-    let mut y_axis: Vec<f64> = vec![];
-    y_axis.push(start);
-    y_axis.push(start + step);
-    y_axis.push(step_part1);
-    y_axis.push(step_part1 + step);
-    y_axis.push(end);
-    y_axis
+    Ok(vec![
+        start,
+        start + step,
+        step_part1,
+        step_part1 + step,
+        end,
+    ])
 }
 
 pub fn stox_get_quotes(symbol: String) -> Vec<String> {
