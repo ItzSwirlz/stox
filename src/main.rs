@@ -313,7 +313,9 @@ fn build_ui(app: &Application) {
     }
 
     let header_bar = HeaderBar::new();
-    header_bar.set_title_widget(Some(&Label::new(Some("Stox"))));
+    let title = Label::new(Some("Stox"));
+    title.set_markup("<span weight=\"bold\">Stox</span>");
+    header_bar.set_title_widget(Some(&title));
     header_bar.set_show_title_buttons(true);
 
     window.set_titlebar(Some(&header_bar));
