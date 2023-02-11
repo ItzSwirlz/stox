@@ -7,33 +7,52 @@ use yahoo::YahooConnector;
 use yahoo::*;
 use yahoo_finance_api as yahoo;
 
+pub struct MainInfo {
+    pub last_quote: String,
+    pub short_name: String,
+    pub instrument_type: String,
+    pub delta: String,
+}
+
 pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {
     let provider = YahooConnector::new();
     provider.search_ticker(symbol).unwrap().quotes
 }
 
-pub fn stox_get_main_info(symbol: &str) -> Result<(String, String, String)> {
+pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     let provider = yahoo::YahooConnector::new();
     let latest_quotes = provider.get_latest_quotes(symbol, "1h")?;
 
     let last_quote = latest_quotes.last_quote()?.close;
+
+    let meta = &latest_quotes.chart.result[0].meta;
+    let currency = meta.currency.to_uppercase();
+    let instrument_type = (&meta.instrument_type).to_string();
+
+    let previous_close = meta.previous_close.context("expected previous close")?;
+    let mut delta = format!("{:.2}", last_quote - previous_close);
+    if !delta.starts_with('-') {
+        delta.insert_str(0, "+");
+    }
 
     let last_quote = (last_quote * 100.0).trunc() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
     let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
 
-    let meta = &latest_quotes.chart.result[0].meta;
-    let currency = meta.currency.to_uppercase();
-    let instrument_type = (&meta.instrument_type).to_string();
+    let mut main_info = MainInfo {
+        last_quote: last_quote.to_string(),
+        short_name: short_name.to_string(),
+        instrument_type,
+        delta,
+    };
 
-    match iso::find(&currency) {
-        Some(currency) => {
-            let last_quote = Money::from_decimal(last_quote, currency).to_string();
-            Ok((last_quote, short_name.clone(), instrument_type))
-        }
-        None => Ok((last_quote.to_string(), short_name.clone(), instrument_type)),
+    if let Some(currency) = iso::find(&currency) {
+        let last_quote = Money::from_decimal(last_quote, currency).to_string();
+        main_info.last_quote = last_quote;
     }
+
+    Ok(main_info)
 }
 
 pub fn stox_get_ranges(symbol: String) -> Vec<String> {

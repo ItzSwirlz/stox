@@ -58,19 +58,38 @@ impl StoxDataGrid {
         let symbol = RefCell::new(symbol);
 
         std::thread::spawn(move || match stox_get_main_info(&*symbol.borrow()) {
-            Ok(main_info) => sender.send((main_info.0, main_info.1)).unwrap(),
-            Err(_) => sender.send(("???".to_string(), "???".to_string())).unwrap(),
+            Ok(main_info) => sender.send(Some(main_info)).unwrap(),
+            Err(_) => sender.send(None).unwrap(),
         });
 
         let name_label = self.imp().name_label.borrow().clone();
         let latest_quote = self.imp().latest_quote.borrow().clone();
+        let delta_label = self.imp().delta_label.borrow().clone();
 
         name_label.set_label("--");
         latest_quote.set_label("--");
+        delta_label.set_label("--");
+        delta_label.set_css_classes(&[]);
 
-        receiver.attach(None, move |(last_quote, short_name)| {
-            latest_quote.set_label(&last_quote);
-            name_label.set_label(&short_name);
+        receiver.attach(None, move |main_info| {
+            match main_info {
+                Some(main_info) => {
+                    name_label.set_label(&main_info.short_name);
+                    latest_quote.set_label(&main_info.last_quote);
+                    delta_label.set_label(&main_info.delta);
+
+                    if main_info.delta.chars().nth(0).unwrap() == '-' {
+                        delta_label.set_css_classes(&["delta_negative"]);
+                    } else {
+                        delta_label.set_css_classes(&["delta_positive"]);
+                    }
+                }
+                None => {
+                    name_label.set_label("???");
+                    latest_quote.set_label("???");
+                    delta_label.set_label("???");
+                }
+            }
 
             drop(lock.clone());
 

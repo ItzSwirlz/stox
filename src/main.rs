@@ -77,6 +77,14 @@ fn build_ui(app: &Application) {
             #latest_quote {
                 font-size: 25px;
             }
+
+            .delta_positive {
+                color: #2E8B57;
+            }
+
+            .delta_negative {
+                color: #dc143c;
+            }
         "
         .as_bytes(),
     );

@@ -19,6 +19,8 @@ pub struct StoxSidebarItem {
     desc_label: TemplateChild<Label>,
     #[template_child]
     quote_label: TemplateChild<Label>,
+    #[template_child]
+    delta_label: TemplateChild<Label>,
     symbol: RefCell<String>,
     searched: RefCell<bool>,
 }
@@ -85,11 +87,16 @@ impl ObjectImpl for StoxSidebarItem {
         obj.set_visible(true);
 
         self.symbol_label.get().set_label(&self.symbol.borrow());
+        self.symbol_label
+            .get()
+            .set_tooltip_text(Some(&self.symbol.borrow()));
+
         self.start_ticking(
             self.symbol.borrow().to_string(),
             self.desc_label.get(),
             self.quote_label.get(),
             self.symbol_label.get(),
+            self.delta_label.get(),
         );
     }
 }
@@ -107,33 +114,51 @@ impl StoxSidebarItem {
         desc_label: Label,
         quote_label: Label,
         symbol_label: Label,
+        delta_label: Label,
     ) {
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
         std::thread::spawn(move || match stox_get_main_info(symbol.as_str()) {
-            Ok(main_info) => sender
-                .send((main_info.0, main_info.1, Some(main_info.2)))
-                .unwrap(),
-            Err(_) => sender
-                .send(("???".to_string(), "???".to_string(), None))
-                .unwrap(),
+            Ok(main_info) => sender.send(Some(main_info)).unwrap(),
+            Err(_) => sender.send(None).unwrap(),
         });
 
-        receiver.attach(None, move |(last_quote, short_name, instrument_type)| {
-            quote_label.set_text(&last_quote.to_string());
-            desc_label.set_text(&short_name.to_string());
-            if let Some(instrument_type) = instrument_type {
-                if instrument_type == "FUTURE" {
-                    symbol_label.set_markup(
-                        String::from(
-                            "<span foreground=\"#2ec27e\">".to_owned()
-                                + &symbol_label.text().to_string()
-                                + "</span>",
-                        )
-                        .as_str(),
-                    );
+        receiver.attach(None, move |main_info| {
+            match main_info {
+                Some(main_info) => {
+                    quote_label.set_text(&main_info.last_quote);
+                    quote_label.set_tooltip_text(Some(&main_info.last_quote));
+
+                    desc_label.set_text(&main_info.short_name);
+                    desc_label.set_tooltip_text(Some(&main_info.short_name));
+
+                    delta_label.set_text(&main_info.delta);
+                    delta_label.set_tooltip_text(Some(&main_info.delta));
+
+                    if main_info.delta.chars().nth(0).unwrap() == '-' {
+                        delta_label.set_css_classes(&["delta_negative"]);
+                    } else {
+                        delta_label.set_css_classes(&["delta_positive"]);
+                    }
+
+                    if main_info.instrument_type == "FUTURE" {
+                        symbol_label.set_markup(
+                            String::from(
+                                "<span foreground=\"#2ec27e\">".to_owned()
+                                    + &symbol_label.text().to_string()
+                                    + "</span>",
+                            )
+                            .as_str(),
+                        );
+                    }
+                }
+                None => {
+                    quote_label.set_text("???");
+                    desc_label.set_text("???");
+                    delta_label.set_text("???");
                 }
             }
+
             Continue(true)
         });
     }
