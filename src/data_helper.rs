@@ -73,8 +73,14 @@ pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
 
     let quote = &data["optionChain"]["result"][0]["quote"];
 
-    let exchange_name = quote["fullExchangeName"].as_str().unwrap().to_owned();
-    let day_range = quote["regularMarketDayRange"].as_str().unwrap().to_owned();
+    let exchange_name = quote["fullExchangeName"]
+        .as_str()
+        .context("expected exchange name")?
+        .to_owned();
+    let day_range = quote["regularMarketDayRange"]
+        .as_str()
+        .context("expected day range")?
+        .to_owned();
 
     Ok(ExtendedInfo {
         exchange_name,

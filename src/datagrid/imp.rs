@@ -95,10 +95,7 @@ impl ObjectImpl for StoxDataGrid {
             .build();
         latest_quote.show();
 
-        let delta_label = Label::builder()
-            .halign(Align::End)
-            .label("--")
-            .build();
+        let delta_label = Label::builder().halign(Align::End).label("--").build();
         delta_label.show();
 
         let notebook = Notebook::builder()
