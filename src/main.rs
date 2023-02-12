@@ -179,12 +179,16 @@ fn build_ui(app: &Application) {
                     return Continue(true)
                 }
 
-                let quotes = stox_search_symbol(&query);
-                for i in quotes.iter() {
-                    let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
-                    sidebar_item.show();
-                    sidebar.append(&sidebar_item);
-                    sidebar_symbols.lock().unwrap().push(sidebar_item);
+                match stox_search_symbol(&query) {
+                    Ok(quotes) => {
+                        for i in quotes.iter() {
+                            let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
+                            sidebar_item.show();
+                            sidebar.append(&sidebar_item);
+                            sidebar_symbols.lock().unwrap().push(sidebar_item);
+                        }
+                    },
+                    Err(_) => {}
                 }
 
                 Continue(true)

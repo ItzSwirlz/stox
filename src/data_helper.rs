@@ -14,12 +14,9 @@ pub struct MainInfo {
     pub delta: String,
 }
 
-pub fn stox_search_symbol(symbol: &str) -> Vec<YQuoteItem> {
+pub fn stox_search_symbol(symbol: &str) -> Result<Vec<YQuoteItem>, anyhow::Error> {
     let provider = YahooConnector::new();
-    provider
-        .search_ticker(&urlencoding::encode(symbol))
-        .unwrap()
-        .quotes
+    Ok(provider.search_ticker(&urlencoding::encode(symbol))?.quotes)
 }
 
 pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
