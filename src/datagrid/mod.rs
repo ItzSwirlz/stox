@@ -11,7 +11,7 @@ use gtk4::traits::WidgetExt;
 
 use lazy_static::lazy_static;
 
-use crate::data_helper::stox_get_main_info;
+use crate::data_helper::stox_get_complete_info;
 
 glib::wrapper! {
     pub struct StoxDataGrid(ObjectSubclass<imp::StoxDataGrid>)
@@ -57,23 +57,27 @@ impl StoxDataGrid {
 
         let symbol = RefCell::new(symbol);
 
-        std::thread::spawn(move || match stox_get_main_info(&*symbol.borrow()) {
-            Ok(main_info) => sender.send(Some(main_info)).unwrap(),
+        std::thread::spawn(move || match stox_get_complete_info(&*symbol.borrow()) {
+            Ok((main_info, extended_info)) => {
+                sender.send(Some((main_info, extended_info))).unwrap()
+            }
             Err(_) => sender.send(None).unwrap(),
         });
 
         let name_label = self.imp().name_label.borrow().clone();
         let latest_quote = self.imp().latest_quote.borrow().clone();
         let delta_label = self.imp().delta_label.borrow().clone();
+        let info_label = self.imp().info_label.borrow().clone();
 
         name_label.set_label("--");
         latest_quote.set_label("--");
         delta_label.set_label("--");
         delta_label.set_css_classes(&[]);
+        info_label.set_label("--");
 
-        receiver.attach(None, move |main_info| {
-            match main_info {
-                Some(main_info) => {
+        receiver.attach(None, move |complete_info| {
+            match complete_info {
+                Some((main_info, extended_info)) => {
                     name_label.set_label(&main_info.short_name);
                     latest_quote.set_label(&main_info.last_quote);
                     delta_label.set_label(&main_info.delta);
@@ -83,11 +87,17 @@ impl StoxDataGrid {
                     } else {
                         delta_label.set_css_classes(&["delta_positive"]);
                     }
+
+                    info_label.set_label(&format!(
+                        "{} - {}",
+                        extended_info.exchange_name, main_info.currency
+                    ));
                 }
                 None => {
                     name_label.set_label("???");
                     latest_quote.set_label("???");
                     delta_label.set_label("???");
+                    info_label.set_label("???");
                 }
             }
 

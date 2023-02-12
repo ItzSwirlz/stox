@@ -17,6 +17,7 @@ pub struct StoxDataGrid {
     pub name_label: RefCell<Label>,
     pub latest_quote: RefCell<Label>,
     pub delta_label: RefCell<Label>,
+    pub info_label: RefCell<Label>,
     pub save_btn: RefCell<Button>,
     pub unsave_btn: RefCell<Button>,
     pub notebook: RefCell<Notebook>,
@@ -73,42 +74,56 @@ impl ObjectImpl for StoxDataGrid {
             .build();
         symbol_label.show();
 
-        let name = Label::new(Some("--"));
-        name.set_widget_name("company_name");
-        name.set_valign(Align::Baseline);
+        let name = Label::builder()
+            .valign(Align::Baseline)
+            .label("--")
+            .name("company_name")
+            .build();
         name.show();
 
-        let latest_quote = Label::new(Some("--"));
-        latest_quote.set_widget_name("latest_quote");
-        latest_quote.set_halign(Align::End);
+        let info_label = Label::builder()
+            .halign(Align::Start)
+            .label("--")
+            .name("stock_info")
+            .build();
+        info_label.show();
+
+        let latest_quote = Label::builder()
+            .halign(Align::End)
+            .label("--")
+            .name("latest_quote")
+            .build();
         latest_quote.show();
 
-        let delta_label = Label::new(Some("--"));
-        delta_label.set_halign(Align::End);
+        let delta_label = Label::builder()
+            .halign(Align::End)
+            .label("--")
+            .build();
         delta_label.show();
 
         let notebook = Notebook::builder()
             .focusable(true)
             .hexpand(true)
             .height_request(350)
-            .margin_top(10)
+            .margin_top(15)
             .build();
 
         grid.attach(&symbol_label, 0, 0, 1, 1);
         grid.attach(&name, 1, 0, 1, 1);
+        grid.attach(&info_label, 0, 1, 3, 1);
 
         let quote_box = Box::builder()
             .spacing(0)
             .orientation(Orientation::Vertical)
             .halign(Align::End)
-            .valign(Align::Center)
+            .valign(Align::End)
             .hexpand(true)
             .build();
         quote_box.append(&latest_quote);
         quote_box.append(&delta_label);
 
         grid.attach(&quote_box, 2, 0, 1, 1);
-        grid.attach(&notebook, 0, 1, 3, 2);
+        grid.attach(&notebook, 0, 2, 3, 2);
 
         grid.show();
         grid.set_parent(&*obj);
@@ -176,12 +191,13 @@ impl ObjectImpl for StoxDataGrid {
             btns_box.append(&refresh_btn);
         }
 
-        grid.attach(&btns_box, 0, 3, 3, 1);
+        grid.attach(&btns_box, 0, 4, 3, 1);
 
         *self.symbol_label.borrow_mut() = symbol_label;
         *self.name_label.borrow_mut() = name;
         *self.latest_quote.borrow_mut() = latest_quote;
         *self.delta_label.borrow_mut() = delta_label;
+        *self.info_label.borrow_mut() = info_label;
         *self.notebook.borrow_mut() = notebook;
     }
 }

@@ -66,20 +66,24 @@ fn build_ui(app: &Application) {
         "
             #symbol {
                 font-weight: bold;
-                font-size: 50px;
+                font-size: 43px;
             }
 
             #company_name {
-                font-style: italic;
-                font-size: 25px;
+                font-size: 28px;
             }
 
             #latest_quote {
                 font-size: 25px;
             }
 
+            #stock_info {
+                font-size: 20px;
+                font-weight: 300;
+            }
+
             .delta_positive {
-                color: #2E8B57;
+                color: #2e8b57;
             }
 
             .delta_negative {

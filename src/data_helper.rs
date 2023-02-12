@@ -12,6 +12,12 @@ pub struct MainInfo {
     pub short_name: String,
     pub instrument_type: String,
     pub delta: String,
+    pub currency: String,
+}
+
+pub struct ExtendedInfo {
+    pub exchange_name: String,
+    pub day_range: String,
 }
 
 pub fn stox_search_symbol(symbol: &str) -> Result<Vec<YQuoteItem>, anyhow::Error> {
@@ -45,6 +51,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
         short_name: short_name.to_string(),
         instrument_type,
         delta,
+        currency: currency.clone(),
     };
 
     if let Some(currency) = iso::find(&currency) {
@@ -53,6 +60,30 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     }
 
     Ok(main_info)
+}
+
+pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
+    let url = format!(
+        "https://query1.finance.yahoo.com/v7/finance/options/{}",
+        symbol
+    );
+
+    let data = reqwest::blocking::get(url)?.text()?;
+    let data: Value = serde_json::from_str(&data)?;
+
+    let quote = &data["optionChain"]["result"][0]["quote"];
+
+    let exchange_name = quote["fullExchangeName"].as_str().unwrap().to_owned();
+    let day_range = quote["regularMarketDayRange"].as_str().unwrap().to_owned();
+
+    Ok(ExtendedInfo {
+        exchange_name,
+        day_range,
+    })
+}
+
+pub fn stox_get_complete_info(symbol: &str) -> Result<(MainInfo, ExtendedInfo)> {
+    Ok((stox_get_main_info(symbol)?, stox_get_extended_info(symbol)?))
 }
 
 pub fn stox_get_ranges(symbol: String) -> Vec<String> {
@@ -133,17 +164,10 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>,
 
 // Currently the yahoo finance api crate doesn't have support for getting market day ranges
 pub fn stox_get_chart_y_axis(symbol: String) -> Result<Vec<f64>, anyhow::Error> {
-    let body = reqwest::blocking::get(format!(
-        "https://query1.finance.yahoo.com/v7/finance/options/{}",
-        symbol
-    ))?
-    .text()?;
-
-    let json_res: Value = serde_json::from_str(&body)?;
-    let range = json_res["optionChain"]["result"][0]["quote"]["regularMarketDayRange"].to_string();
+    let extended_info = stox_get_extended_info(&symbol)?;
 
     // We have our range, but we need to make it a vec of points.
-    let i = range.trim().replace("\"", "");
+    let i = extended_info.day_range.trim();
     let i2: Vec<&str> = i.split(" - ").collect();
     let start: f64 = i2[0].parse()?;
     let end: f64 = i2[1].parse()?;
