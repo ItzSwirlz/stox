@@ -159,22 +159,15 @@ pub fn stox_get_chart_y_axis(symbol: String) -> Result<Vec<f64>, anyhow::Error> 
     ])
 }
 
-pub fn stox_get_quotes(symbol: String) -> Vec<String> {
+pub fn stox_get_quotes(symbol: String) -> Vec<f64> {
     let provider = YahooConnector::new();
     let response = provider.get_latest_quotes(&symbol, "30m").unwrap();
-    let mut axis: Vec<String> = vec![];
+    let mut axis: Vec<f64> = vec![];
     for index_first in response.quotes().into_iter() {
         for index in index_first.iter() {
             let quote = index.close;
-            let timestamp = index.timestamp;
-            let day = Utc
-                .timestamp_opt(timestamp as i64, 0)
-                .unwrap()
-                .day()
-                .to_string();
 
-            // Align day with quote, for now assume we are on one-day quotes
-            axis.push(day + "," + &quote.to_string());
+            axis.push(quote as f64);
         }
     }
     return axis;

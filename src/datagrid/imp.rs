@@ -200,11 +200,13 @@ impl StoxDataGrid {
         }
         let x_axis = x_axis.unwrap();
 
-        let y_axis = stox_get_chart_y_axis(symbol);
+        let y_axis = stox_get_chart_y_axis(symbol.clone());
         if !y_axis.is_ok() {
             return;
         }
         let y_axis = y_axis.unwrap();
+
+        let quotes = stox_get_quotes(symbol);
 
         let drawing_area = DrawingArea::new();
 
@@ -232,7 +234,7 @@ impl StoxDataGrid {
                 cr.show_text(x_iter.next().unwrap()).unwrap();
             }
 
-            for y_grid_line in (0..(height)).step_by(height as usize / 4 as usize) {
+            for y_grid_line in (0..(height)).step_by(height as usize / 4 as usize).rev() {
                 cr.move_to(0.0, y_grid_line as f64);
                 cr.line_to(width as f64, y_grid_line as f64);
                 cr.stroke().unwrap();
@@ -242,14 +244,19 @@ impl StoxDataGrid {
                 cr.show_text(&*y_iter.next().unwrap().to_string());
             }
 
-            for (i, j) in x_points.iter().zip(y_points.clone()) {
-                cr.move_to(*i as f64 + width as f64, j as f64);
-                println!("{} {}", i, j);
-                cr.line_to(0.0, 0.0); // temporary  testing
-                cr.stroke();
+            cr.set_source_rgb(0.0, 255.0, 0.0);
+            let lines_step = quotes.len();
+            let mut quote_iter = quotes.iter();
+            cr.move_to(0 as f64, height as f64);
+            for i in (0..=width).step_by(width as usize / (lines_step - 50)) {
+                let next = quote_iter.next();
+                if next != None {
+                    cr.line_to(i as f64, (next.unwrap().to_owned()) as f64 / height as f64);
+                    cr.stroke().unwrap();
+                    cr.line_to(i as f64, (next.unwrap().to_owned()) as f64);
+                }
             }
         });
-
         drawing_area.show();
     }
 }
