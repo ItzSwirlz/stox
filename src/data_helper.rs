@@ -41,7 +41,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
         delta.insert_str(0, "+");
     }
 
-    let last_quote = (last_quote * 100.0).trunc() as i64;
+    let last_quote = (last_quote * 100.0).round() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
     let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
