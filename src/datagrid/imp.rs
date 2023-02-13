@@ -258,7 +258,7 @@ impl StoxDataGrid {
                 y_points.push(y_grid_line);
 
                 cr.move_to(2.0, y_grid_line as f64);
-                cr.show_text(&*y_iter.next().unwrap().to_string()).unwrap();
+                cr.show_text(&format!("{:.2}", y_iter.next().unwrap())).unwrap();
             }
 
             cr.set_source_rgb(0.0, 255.0, 0.0);
