@@ -20,6 +20,7 @@ pub struct StoxDataGrid {
     pub info_label: RefCell<Label>,
     pub save_btn: RefCell<Button>,
     pub unsave_btn: RefCell<Button>,
+    pub refresh_btn: RefCell<Button>,
     pub notebook: RefCell<Notebook>,
 }
 
@@ -175,6 +176,7 @@ impl ObjectImpl for StoxDataGrid {
             refresh_btn_box.append(&refresh_label);
 
             let refresh_btn = Button::builder().child(&refresh_btn_box).build();
+            btns_box.append(&refresh_btn);
 
             refresh_btn.connect_clicked(clone!(@weak self as this => move |_| {
                 let symbol = this.symbol_label.borrow().label().to_string();
@@ -185,7 +187,9 @@ impl ObjectImpl for StoxDataGrid {
                 this.obj().update(symbol, true, this.unsave_btn.borrow().is_visible());
             }));
 
-            btns_box.append(&refresh_btn);
+            refresh_btn.hide();
+
+            *self.refresh_btn.borrow_mut() = refresh_btn;
         }
 
         grid.attach(&btns_box, 0, 4, 3, 1);
