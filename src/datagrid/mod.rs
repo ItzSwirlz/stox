@@ -37,6 +37,8 @@ impl StoxDataGrid {
         }
         let lock = lock.unwrap();
 
+        self.imp().refresh_btn.borrow().show();
+
         let symbol_label = self.imp().symbol_label.borrow();
 
         if !force_update && symbol_label.label() == symbol {
