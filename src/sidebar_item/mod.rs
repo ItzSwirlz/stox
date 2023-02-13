@@ -10,6 +10,6 @@ glib::wrapper! {
 
 impl StoxSidebarItem {
     pub fn new(symbol: &str, searched: bool) -> Self {
-        glib::Object::new(&[("symbol", &symbol.to_string()), ("searched", &searched)])
+        glib::Object::new(&[("symbol", &symbol), ("searched", &searched)])
     }
 }

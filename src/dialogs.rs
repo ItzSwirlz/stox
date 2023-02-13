@@ -25,7 +25,9 @@ pub fn show_load_saved_stocks_failed_dialog(window: &ApplicationWindow) {
 pub fn show_saving_unsaving_disabled_dialog(window: &ApplicationWindow) {
     show_error_dialog(
         window,
-        &gettext("Saving and unsaving stocks is disabled to prevent data loss. Try restarting the app."),
+        &gettext(
+            "Saving and unsaving stocks is disabled to prevent data loss. Try restarting the app.",
+        ),
     );
 }
 

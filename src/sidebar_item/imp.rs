@@ -48,7 +48,7 @@ impl ObjectImpl for StoxSidebarItem {
                 ParamSpecBoolean::builder("searched").build(),
             ]
         });
-        PROPERTIES.as_ref()
+        &PROPERTIES
     }
 
     fn set_property(&self, _id: usize, value: &Value, _pspec: &ParamSpec) {
@@ -118,7 +118,7 @@ impl StoxSidebarItem {
     ) {
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        std::thread::spawn(move || match stox_get_complete_info(symbol.as_str()) {
+        std::thread::spawn(move || match stox_get_complete_info(&symbol) {
             Ok(main_info) => sender.send(Some(main_info)).unwrap(),
             Err(_) => sender.send(None).unwrap(),
         });
@@ -142,14 +142,11 @@ impl StoxSidebarItem {
                     }
 
                     if main_info.instrument_type == "FUTURE" {
-                        symbol_label.set_markup(
-                            String::from(
-                                "<span foreground=\"#2ec27e\">".to_owned()
-                                    + &symbol_label.text().to_string()
-                                    + "</span>",
-                            )
-                            .as_str(),
-                        );
+                        symbol_label.set_markup(&String::from(
+                            "<span foreground=\"#2ec27e\">".to_owned()
+                                + &symbol_label.text().to_string()
+                                + "</span>",
+                        ));
                     }
                 }
                 None => {

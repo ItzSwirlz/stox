@@ -34,7 +34,7 @@ impl ObjectSubclass for StoxDataGrid {
 impl ObjectImpl for StoxDataGrid {
     fn properties() -> &'static [ParamSpec] {
         static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| vec![]);
-        PROPERTIES.as_ref()
+        &PROPERTIES
     }
 
     fn set_property(&self, _id: usize, _value: &Value, _pspec: &ParamSpec) {
@@ -258,7 +258,8 @@ impl StoxDataGrid {
                 y_points.push(y_grid_line);
 
                 cr.move_to(2.0, y_grid_line as f64);
-                cr.show_text(&format!("{:.2}", y_iter.next().unwrap())).unwrap();
+                cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
+                    .unwrap();
             }
 
             cr.set_source_rgb(0.0, 255.0, 0.0);

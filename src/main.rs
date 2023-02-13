@@ -265,7 +265,7 @@ fn build_ui(app: &Application) {
 
             let symbol = datagrid.borrow().imp().symbol_label.borrow().label().to_string();
 
-            let index = (*saved_stocks).borrow_mut().iter().position(|value| symbol == value.as_str());
+            let index = (*saved_stocks).borrow_mut().iter().position(|value| symbol == *value);
             (*saved_stocks).borrow_mut().remove(index.unwrap());
 
             if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
@@ -299,7 +299,6 @@ fn build_ui(app: &Application) {
             }
 
             let symbol = row.property::<String>("symbol");
-            let symbol = symbol.as_str();
 
             if datagrid.borrow().update(
                 symbol.to_string(),
