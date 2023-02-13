@@ -66,13 +66,13 @@ impl StoxDataGrid {
 
         let name_label = self.imp().name_label.borrow().clone();
         let latest_quote = self.imp().latest_quote.borrow().clone();
-        let delta_label = self.imp().delta_label.borrow().clone();
+        let market_change_label = self.imp().market_change_label.borrow().clone();
         let info_label = self.imp().info_label.borrow().clone();
 
         name_label.set_label("--");
         latest_quote.set_label("--");
-        delta_label.set_label("--");
-        delta_label.set_css_classes(&[]);
+        market_change_label.set_label("--");
+        market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
 
         receiver.attach(None, move |complete_info| {
@@ -80,12 +80,12 @@ impl StoxDataGrid {
                 Some((main_info, extended_info)) => {
                     name_label.set_label(&main_info.short_name);
                     latest_quote.set_label(&main_info.last_quote);
-                    delta_label.set_label(&main_info.delta);
+                    market_change_label.set_label(&extended_info.market_change);
 
-                    if main_info.delta.chars().nth(0).unwrap() == '-' {
-                        delta_label.set_css_classes(&["delta_negative"]);
+                    if extended_info.market_change_neg() {
+                        market_change_label.set_css_classes(&["market_change_neg"]);
                     } else {
-                        delta_label.set_css_classes(&["delta_positive"]);
+                        market_change_label.set_css_classes(&["market_change_pos"]);
                     }
 
                     info_label.set_label(&format!(
@@ -96,7 +96,7 @@ impl StoxDataGrid {
                 None => {
                     name_label.set_label("???");
                     latest_quote.set_label("???");
-                    delta_label.set_label("???");
+                    market_change_label.set_label("???");
                     info_label.set_label("???");
                 }
             }

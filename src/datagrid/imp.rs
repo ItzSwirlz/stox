@@ -16,7 +16,7 @@ pub struct StoxDataGrid {
     pub symbol_label: RefCell<Label>,
     pub name_label: RefCell<Label>,
     pub latest_quote: RefCell<Label>,
-    pub delta_label: RefCell<Label>,
+    pub market_change_label: RefCell<Label>,
     pub info_label: RefCell<Label>,
     pub save_btn: RefCell<Button>,
     pub unsave_btn: RefCell<Button>,
@@ -95,8 +95,8 @@ impl ObjectImpl for StoxDataGrid {
             .build();
         latest_quote.show();
 
-        let delta_label = Label::builder().halign(Align::End).label("--").build();
-        delta_label.show();
+        let market_change_label = Label::builder().halign(Align::End).label("--").build();
+        market_change_label.show();
 
         let notebook = Notebook::builder()
             .focusable(true)
@@ -117,7 +117,7 @@ impl ObjectImpl for StoxDataGrid {
             .hexpand(true)
             .build();
         quote_box.append(&latest_quote);
-        quote_box.append(&delta_label);
+        quote_box.append(&market_change_label);
 
         grid.attach(&quote_box, 2, 0, 1, 1);
         grid.attach(&notebook, 0, 2, 3, 2);
@@ -193,7 +193,7 @@ impl ObjectImpl for StoxDataGrid {
         *self.symbol_label.borrow_mut() = symbol_label;
         *self.name_label.borrow_mut() = name;
         *self.latest_quote.borrow_mut() = latest_quote;
-        *self.delta_label.borrow_mut() = delta_label;
+        *self.market_change_label.borrow_mut() = market_change_label;
         *self.info_label.borrow_mut() = info_label;
         *self.notebook.borrow_mut() = notebook;
     }

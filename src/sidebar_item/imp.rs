@@ -8,7 +8,7 @@ use gtk4::*;
 
 use once_cell::sync::Lazy;
 
-use crate::data_helper::stox_get_main_info;
+use crate::data_helper::stox_get_complete_info;
 
 #[derive(Default, CompositeTemplate)]
 #[template(resource = "/org/itzswirlz/stox/resources/ui/stoxsidebaritem.ui")]
@@ -20,7 +20,7 @@ pub struct StoxSidebarItem {
     #[template_child]
     quote_label: TemplateChild<Label>,
     #[template_child]
-    delta_label: TemplateChild<Label>,
+    market_change_label: TemplateChild<Label>,
     symbol: RefCell<String>,
     searched: RefCell<bool>,
 }
@@ -96,7 +96,7 @@ impl ObjectImpl for StoxSidebarItem {
             self.desc_label.get(),
             self.quote_label.get(),
             self.symbol_label.get(),
-            self.delta_label.get(),
+            self.market_change_label.get(),
         );
     }
 }
@@ -114,31 +114,31 @@ impl StoxSidebarItem {
         desc_label: Label,
         quote_label: Label,
         symbol_label: Label,
-        delta_label: Label,
+        market_change_label: Label,
     ) {
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        std::thread::spawn(move || match stox_get_main_info(symbol.as_str()) {
+        std::thread::spawn(move || match stox_get_complete_info(symbol.as_str()) {
             Ok(main_info) => sender.send(Some(main_info)).unwrap(),
             Err(_) => sender.send(None).unwrap(),
         });
 
-        receiver.attach(None, move |main_info| {
-            match main_info {
-                Some(main_info) => {
+        receiver.attach(None, move |complete_info| {
+            match complete_info {
+                Some((main_info, extended_info)) => {
                     quote_label.set_text(&main_info.last_quote);
                     quote_label.set_tooltip_text(Some(&main_info.last_quote));
 
                     desc_label.set_text(&main_info.short_name);
                     desc_label.set_tooltip_text(Some(&main_info.short_name));
 
-                    delta_label.set_text(&main_info.delta);
-                    delta_label.set_tooltip_text(Some(&main_info.delta));
+                    market_change_label.set_text(&extended_info.market_change);
+                    market_change_label.set_tooltip_text(Some(&extended_info.market_change));
 
-                    if main_info.delta.chars().nth(0).unwrap() == '-' {
-                        delta_label.set_css_classes(&["delta_negative"]);
+                    if extended_info.market_change_neg() {
+                        market_change_label.set_css_classes(&["market_change_neg"]);
                     } else {
-                        delta_label.set_css_classes(&["delta_positive"]);
+                        market_change_label.set_css_classes(&["market_change_pos"]);
                     }
 
                     if main_info.instrument_type == "FUTURE" {
@@ -155,7 +155,7 @@ impl StoxSidebarItem {
                 None => {
                     quote_label.set_text("???");
                     desc_label.set_text("???");
-                    delta_label.set_text("???");
+                    market_change_label.set_text("???");
                 }
             }
 

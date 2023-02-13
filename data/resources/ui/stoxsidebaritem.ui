@@ -63,7 +63,7 @@
                         <property name="halign">end</property>
                         <property name="valign">start</property>
                         <child>
-                            <object class="GtkLabel" id="delta_label">
+                            <object class="GtkLabel" id="market_change_label">
                                 <property name="halign">end</property>
                                 <property name="justify">right</property>
                                 <property name="ellipsize">end</property>

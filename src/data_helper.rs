@@ -11,13 +11,19 @@ pub struct MainInfo {
     pub last_quote: String,
     pub short_name: String,
     pub instrument_type: String,
-    pub delta: String,
     pub currency: String,
 }
 
 pub struct ExtendedInfo {
     pub exchange_name: String,
     pub day_range: String,
+    pub market_change: String,
+}
+
+impl ExtendedInfo {
+    pub fn market_change_neg(&self) -> bool {
+        self.market_change.chars().nth(0).unwrap() == '-'
+    }
 }
 
 pub fn stox_search_symbol(symbol: &str) -> Result<Vec<YQuoteItem>, anyhow::Error> {
@@ -30,27 +36,19 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     let latest_quotes = provider.get_latest_quotes(symbol, "1h")?;
 
     let last_quote = latest_quotes.last_quote()?.close;
-
-    let meta = &latest_quotes.chart.result[0].meta;
-    let currency = meta.currency.to_uppercase();
-    let instrument_type = (&meta.instrument_type).to_string();
-
-    let previous_close = meta.previous_close.context("expected previous close")?;
-    let mut delta = format!("{:.2}", last_quote - previous_close);
-    if !delta.starts_with('-') {
-        delta.insert_str(0, "+");
-    }
-
     let last_quote = (last_quote * 100.0).round() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
     let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
 
+    let meta = &latest_quotes.chart.result[0].meta;
+    let currency = meta.currency.to_uppercase();
+    let instrument_type = (&meta.instrument_type).to_string();
+
     let mut main_info = MainInfo {
         last_quote: last_quote.to_string(),
         short_name: short_name.to_string(),
         instrument_type,
-        delta,
         currency: currency.clone(),
     };
 
@@ -82,9 +80,20 @@ pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
         .context("expected day range")?
         .to_owned();
 
+    let mut market_change = format!(
+        "{:.2}",
+        quote["regularMarketChange"]
+            .as_f64()
+            .context("expected market change")?
+    );
+    if !market_change.starts_with('-') {
+        market_change.insert(0, '+');
+    }
+
     Ok(ExtendedInfo {
         exchange_name,
         day_range,
+        market_change,
     })
 }
 

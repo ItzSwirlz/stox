@@ -82,11 +82,11 @@ fn build_ui(app: &Application) {
                 font-weight: 300;
             }
 
-            .delta_positive {
+            .market_change_pos {
                 color: #2e8b57;
             }
 
-            .delta_negative {
+            .market_change_neg {
                 color: #dc143c;
             }
         "
