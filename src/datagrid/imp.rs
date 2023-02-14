@@ -71,6 +71,7 @@ impl ObjectImpl for StoxDataGrid {
             .margin_end(10)
             .label("--")
             .name("symbol")
+            .selectable(true)
             .build();
         symbol_label.show();
 
@@ -78,6 +79,7 @@ impl ObjectImpl for StoxDataGrid {
             .valign(Align::Baseline)
             .label("--")
             .name("company_name")
+            .selectable(true)
             .build();
         name.show();
 
@@ -85,6 +87,7 @@ impl ObjectImpl for StoxDataGrid {
             .halign(Align::Start)
             .label("--")
             .name("stock_info")
+            .selectable(true)
             .build();
         info_label.show();
 
@@ -92,10 +95,15 @@ impl ObjectImpl for StoxDataGrid {
             .halign(Align::End)
             .label("--")
             .name("latest_quote")
+            .selectable(true)
             .build();
         latest_quote.show();
 
-        let market_change_label = Label::builder().halign(Align::End).label("--").build();
+        let market_change_label = Label::builder()
+            .halign(Align::End)
+            .label("--")
+            .selectable(true)
+            .build();
         market_change_label.show();
 
         let notebook = Notebook::builder()
