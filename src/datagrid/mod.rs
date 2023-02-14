@@ -77,6 +77,13 @@ impl StoxDataGrid {
         market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
 
+        {
+            let notebook = self.imp().notebook.borrow_mut();
+            for i in 0..notebook.n_pages() {
+                notebook.remove_page(Some(i));
+            }
+        }
+
         receiver.attach(
             None,
             clone!(@strong self as this => move |complete_info| {
@@ -99,7 +106,8 @@ impl StoxDataGrid {
                             "{} - {}",
                             extended_info.exchange_name, main_info.currency
                         ));
-                        this.imp().construct_graph(extended_info);
+
+                        this.imp().construct_graph(main_info, extended_info);
                     }
                     None => {
                         name_label.set_label("???");

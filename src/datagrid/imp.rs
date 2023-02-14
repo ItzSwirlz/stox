@@ -215,27 +215,20 @@ impl BoxImpl for StoxDataGrid {}
 impl WidgetImpl for StoxDataGrid {}
 
 impl StoxDataGrid {
-    pub fn construct_graph(&self, info: ExtendedInfo) {
+    pub fn construct_graph(&self, main_info: MainInfo, extended_info: ExtendedInfo) {
         let symbol = self.symbol_label.borrow().text().to_string();
 
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        {
-            let notebook = self.notebook.borrow_mut();
-            for i in 0..notebook.n_pages() {
-                notebook.remove_page(Some(i));
-            }
-        }
-
         std::thread::spawn(move || {
-            let x_axis = stox_get_chart_x_axis(symbol.clone(), "1d");
+            let x_axis = stox_get_chart_x_axis(&main_info, "1d");
             if x_axis.is_err() {
                 sender.send(None).unwrap();
                 return;
             }
             let x_axis = x_axis.unwrap();
 
-            let y_axis = stox_get_chart_y_axis(symbol.clone());
+            let y_axis = stox_get_chart_y_axis(&extended_info);
             if y_axis.is_err() {
                 sender.send(None).unwrap();
                 return;
@@ -244,15 +237,21 @@ impl StoxDataGrid {
 
             let quotes = stox_get_quotes(symbol);
 
-            sender.send(Some((x_axis, y_axis, quotes))).unwrap();
+            sender
+                .send(Some((
+                    x_axis,
+                    y_axis,
+                    quotes,
+                    extended_info.market_change_neg(),
+                )))
+                .unwrap();
         });
 
         receiver.attach(
             None,
             clone!(@strong self.notebook as notebook => @default-panic, move |data| {
-                if let Some((x_axis, y_axis, mut quotes)) = data {
+                if let Some((x_axis, y_axis, mut quotes, neg_market_change)) = data {
                     let drawing_area = DrawingArea::new();
-                    let neg_market_change = info.market_change_neg();
 
                     notebook.borrow_mut().append_page(&drawing_area, Some(&Label::new(Some("1D"))));
 
@@ -308,6 +307,7 @@ impl StoxDataGrid {
                         }
 
                         cr.move_to(0.0, *quote_iter.next().unwrap()); // start at the first point
+
                         for i in (0..=width).step_by(width as usize / lines_step) {
                             let next = quote_iter.next();
 

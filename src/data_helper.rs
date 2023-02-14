@@ -12,8 +12,10 @@ pub struct MainInfo {
     pub short_name: String,
     pub instrument_type: String,
     pub currency: String,
+    pub chart: Vec<YQuoteBlock>,
 }
 
+#[derive(Clone)]
 pub struct ExtendedInfo {
     pub exchange_name: String,
     pub day_range: String,
@@ -51,6 +53,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
         short_name: short_name.to_string(),
         instrument_type,
         currency: currency.clone(),
+        chart: latest_quotes.chart.result,
     };
 
     if let Some(currency) = iso::find(&currency) {
@@ -125,19 +128,21 @@ pub fn stox_get_ranges(symbol: String) -> Vec<String> {
     valid_ranges.to_vec()
 }
 
-pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>, anyhow::Error> {
-    let provider = YahooConnector::new();
-    let response = provider.get_latest_quotes(&symbol, "1h")?;
+pub fn stox_get_chart_x_axis(
+    main_info: &MainInfo,
+    range: &str,
+) -> Result<Vec<String>, anyhow::Error> {
     let mut axis: Vec<String> = vec![];
-    for index in response.chart.result.into_iter() {
-        for timestamp in index.timestamp {
+
+    for index in &main_info.chart {
+        for timestamp in &index.timestamp {
             // The x-axis should show different things depending on the range.
             // For example, in the span of one day, we should show the time
             // instead of the day.
             match range {
                 "1d" => {
                     let mut hour = Utc
-                        .timestamp_opt(timestamp as i64, 0)
+                        .timestamp_opt(*timestamp as i64, 0)
                         .single()
                         .context("expected timestamp")?
                         .hour()
@@ -147,13 +152,13 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>,
                 }
                 "5d" | "1wk" | "1mo" => {
                     let mut day = Utc
-                        .timestamp_opt(timestamp as i64, 0)
+                        .timestamp_opt(*timestamp as i64, 0)
                         .single()
                         .context("expected timestamp")?
                         .day()
                         .to_string();
                     let month = Utc
-                        .timestamp_opt(timestamp as i64, 0)
+                        .timestamp_opt(*timestamp as i64, 0)
                         .single()
                         .context("expected timestamp")?
                         .month()
@@ -163,7 +168,7 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>,
                 }
                 "3mo" | "6mo" | "1y" | "2y" => {
                     let month = Utc
-                        .timestamp_opt(timestamp as i64, 0)
+                        .timestamp_opt(*timestamp as i64, 0)
                         .single()
                         .context("expected timestamp")?
                         .month()
@@ -172,7 +177,7 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>,
                 }
                 "5y" | "10y" | "ytd" | "max" => {
                     let year = Utc
-                        .timestamp_opt(timestamp as i64, 0)
+                        .timestamp_opt(*timestamp as i64, 0)
                         .single()
                         .context("expected timestamp")?
                         .year()
@@ -185,14 +190,14 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>,
             }
         }
     }
+
     axis.dedup(); // remove duplicates
+
     Ok(axis)
 }
 
 // Currently the yahoo finance api crate doesn't have support for getting market day ranges
-pub fn stox_get_chart_y_axis(symbol: String) -> Result<Vec<f64>, anyhow::Error> {
-    let extended_info = stox_get_extended_info(&symbol)?;
-
+pub fn stox_get_chart_y_axis(extended_info: &ExtendedInfo) -> Result<Vec<f64>, anyhow::Error> {
     // We have our range, but we need to make it a vec of points.
     let i = extended_info.day_range.trim();
     let i2: Vec<&str> = i.split(" - ").collect();
