@@ -298,7 +298,7 @@ impl StoxDataGrid {
                         }
 
                         // Green for growth
-                        if growth == true {
+                        if growth {
                             cr.set_source_rgb(0.0, 255.0, 0.0);
                         } else {
                             cr.set_source_rgb(255.0, 0.0, 0.0);
