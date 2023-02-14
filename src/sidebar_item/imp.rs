@@ -116,6 +116,10 @@ impl StoxSidebarItem {
         symbol_label: Label,
         market_change_label: Label,
     ) {
+        if symbol.is_empty() {
+            return;
+        }
+
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
         std::thread::spawn(move || match stox_get_complete_info(&symbol) {
