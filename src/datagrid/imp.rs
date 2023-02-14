@@ -294,9 +294,14 @@ impl StoxDataGrid {
 
                         cr.set_source_rgb(0.0, 255.0, 0.0);
 
-                        let lines_step = quotes.len();
+                        let mut lines_step = quotes.len();
                         let new_quotes = stox_scale_quotes(&mut quotes, height);
                         let mut quote_iter = new_quotes.iter().rev(); // reverse or else it is reflected
+
+                        // Don't panic on a lot of quotes
+                        if lines_step > width as usize {
+                            lines_step = width as usize;
+                        }
 
                         cr.move_to(0.0, *quote_iter.next().unwrap()); // start at the first point
                         for i in (0..=width).step_by(width as usize / lines_step) {
