@@ -28,7 +28,7 @@ fn persistence_disabled() -> bool {
 
 fn get_persistence_path() -> Result<PathBuf, anyhow::Error> {
     let mut data_home = env::var("XDG_DATA_HOME");
-    if let Err(_) = data_home {
+    if data_home.is_err() {
         let home = env::var("HOME")?;
         match Path::new(&home).join(".local/share").to_str() {
             Some(path) => data_home = Ok(path.to_string()),
@@ -73,9 +73,9 @@ pub fn write_saved_stocks(symbols: Vec<String>) -> Result<(), anyhow::Error> {
         .truncate(true)
         .create(true)
         .mode(0o600)
-        .open(&path)?;
+        .open(path)?;
 
-    file.write(toml_data.as_bytes())?;
+    file.write_all(toml_data.as_bytes())?;
 
     Ok(())
 }
@@ -98,9 +98,7 @@ pub fn read_saved_stocks() -> Result<Vec<String>, anyhow::Error> {
         }
         Err(err) => {
             if err.kind() == std::io::ErrorKind::NotFound {
-                if let Err(err) = write_saved_stocks(vec![]) {
-                    return Err(err);
-                }
+                write_saved_stocks(vec![])?;
 
                 Ok(vec![])
             } else {

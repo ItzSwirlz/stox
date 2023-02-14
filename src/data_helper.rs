@@ -22,7 +22,7 @@ pub struct ExtendedInfo {
 
 impl ExtendedInfo {
     pub fn market_change_neg(&self) -> bool {
-        self.market_change.chars().nth(0).unwrap() == '-'
+        self.market_change.starts_with('-')
     }
 }
 
@@ -39,11 +39,11 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     let last_quote = (last_quote * 100.0).round() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
-    let ref short_name = provider.search_ticker(&symbol)?.quotes[0].short_name;
+    let short_name = &provider.search_ticker(symbol)?.quotes[0].short_name;
 
     let meta = &latest_quotes.chart.result[0].meta;
     let currency = meta.currency.to_uppercase();
-    let instrument_type = (&meta.instrument_type).to_string();
+    let instrument_type = meta.instrument_type.to_string();
 
     let mut main_info = MainInfo {
         last_quote: last_quote.to_string(),
@@ -174,7 +174,7 @@ pub fn stox_get_chart_x_axis(symbol: String, range: &str) -> Result<Vec<String>,
         }
     }
     axis.dedup(); // remove duplicates
-    return Ok(axis);
+    Ok(axis)
 }
 
 // Currently the yahoo finance api crate doesn't have support for getting market day ranges
@@ -206,13 +206,13 @@ pub fn stox_get_quotes(symbol: String) -> Vec<f64> {
         for index in index_first.iter() {
             let quote = index.close;
 
-            axis.push(quote as f64);
+            axis.push(quote);
         }
     }
-    return axis;
+    axis
 }
 
-pub fn stox_scale_quotes(quotes: &mut Vec<f64>, height: i32) -> Vec<f64> {
+pub fn stox_scale_quotes(quotes: &mut [f64], height: i32) -> Vec<f64> {
     let max = quotes.iter().max_by(|a, b| a.total_cmp(b)).unwrap();
     let min = quotes.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
     let mut ret: Vec<f64> = vec![];

@@ -54,7 +54,7 @@ fn build_ui(app: &Application) {
     let mut error_loading_saved_stocks = false;
 
     let mut saved_stocks = read_saved_stocks();
-    if let Err(_) = saved_stocks {
+    if saved_stocks.is_err() {
         error_loading_saved_stocks = true;
         saved_stocks = Ok(vec![]);
     }
@@ -130,7 +130,7 @@ fn build_ui(app: &Application) {
 
     let sidebar_symbols: Arc<Mutex<Vec<StoxSidebarItem>>> = Arc::new(Mutex::new(Vec::new()));
     for ticker in &*saved_stocks.borrow() {
-        let sidebar_item = StoxSidebarItem::new(&ticker, false);
+        let sidebar_item = StoxSidebarItem::new(ticker, false);
         sidebar_item.show();
         sidebar.append(&sidebar_item);
         sidebar_symbols.lock().unwrap().push(sidebar_item);
@@ -183,16 +183,13 @@ fn build_ui(app: &Application) {
                     return Continue(true)
                 }
 
-                match stox_search_symbol(&query) {
-                    Ok(quotes) => {
-                        for i in quotes.iter() {
-                            let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
-                            sidebar_item.show();
-                            sidebar.append(&sidebar_item);
-                            sidebar_symbols.lock().unwrap().push(sidebar_item);
-                        }
-                    },
-                    Err(_) => {}
+                if let Ok(quotes) = stox_search_symbol(&query) {
+                    for i in quotes.iter() {
+                        let sidebar_item = StoxSidebarItem::new(&i.symbol, true);
+                        sidebar_item.show();
+                        sidebar.append(&sidebar_item);
+                        sidebar_symbols.lock().unwrap().push(sidebar_item);
+                    }
                 }
 
                 Continue(true)
@@ -235,7 +232,7 @@ fn build_ui(app: &Application) {
                 let symbol = datagrid.borrow().imp().symbol_label.borrow().label().to_string();
                 (*saved_stocks).borrow_mut().push(symbol.clone());
 
-                if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+                if write_saved_stocks((*saved_stocks).borrow().to_vec()).is_err() {
                     dialogs::show_save_stock_failed_dialog(&window);
                     return;
                 }
@@ -268,7 +265,7 @@ fn build_ui(app: &Application) {
             let index = (*saved_stocks).borrow_mut().iter().position(|value| symbol == *value);
             (*saved_stocks).borrow_mut().remove(index.unwrap());
 
-            if let Err(_) = write_saved_stocks((*saved_stocks).borrow().to_vec()) {
+            if write_saved_stocks((*saved_stocks).borrow().to_vec()).is_err() {
                 dialogs::show_unsave_stock_failed_dialog(&window);
                 return;
             }
@@ -303,7 +300,7 @@ fn build_ui(app: &Application) {
             if datagrid.borrow().update(
                 symbol.to_string(),
                 false,
-                (*saved_stocks).borrow().contains(&symbol.to_string()),
+                (*saved_stocks).borrow().contains(&symbol),
             ) {
                 if let Some(previous_row) = previous_row.borrow().clone() {
                     sidebar.select_row(Some(&previous_row));

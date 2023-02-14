@@ -142,11 +142,11 @@ impl StoxSidebarItem {
                     }
 
                     if main_info.instrument_type == "FUTURE" {
-                        symbol_label.set_markup(&String::from(
-                            "<span foreground=\"#2ec27e\">".to_owned()
-                                + &symbol_label.text().to_string()
-                                + "</span>",
-                        ));
+                        symbol_label.set_markup(
+                            &("<span foreground=\"#2ec27e\">".to_owned()
+                                + &symbol_label.text()
+                                + "</span>"),
+                        );
                     }
                 }
                 None => {

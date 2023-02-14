@@ -27,7 +27,7 @@ impl StoxDataGrid {
     pub fn new() -> Self {
         let obj: StoxDataGrid = Object::builder().build();
 
-        return obj;
+        obj
     }
 
     pub fn update(&self, symbol: String, force_update: bool, is_saved: bool) -> bool {
@@ -35,7 +35,7 @@ impl StoxDataGrid {
         if lock.is_err() {
             return true;
         }
-        let lock = lock.unwrap();
+        let lock = RefCell::new(Some(lock.unwrap()));
 
         self.imp().refresh_btn.borrow().show();
 
@@ -59,7 +59,7 @@ impl StoxDataGrid {
 
         let symbol = RefCell::new(symbol);
 
-        std::thread::spawn(move || match stox_get_complete_info(&*symbol.borrow()) {
+        std::thread::spawn(move || match stox_get_complete_info(&symbol.borrow()) {
             Ok((main_info, extended_info)) => {
                 sender.send(Some((main_info, extended_info))).unwrap()
             }
@@ -103,13 +103,19 @@ impl StoxDataGrid {
                 }
             }
 
-            drop(lock.clone());
+            drop(lock.replace(None));
 
             Continue(false)
         });
 
         self.imp().construct_graph();
 
-        return false;
+        false
+    }
+}
+
+impl Default for StoxDataGrid {
+    fn default() -> Self {
+        Self::new()
     }
 }

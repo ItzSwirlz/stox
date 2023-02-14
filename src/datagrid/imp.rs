@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 
-use gtk4::builders::DrawingAreaBuilder;
 use gtk4::glib::subclass::types::ObjectSubclass;
 use gtk4::glib::*;
 use gtk4::prelude::*;
@@ -33,7 +32,7 @@ impl ObjectSubclass for StoxDataGrid {
 
 impl ObjectImpl for StoxDataGrid {
     fn properties() -> &'static [ParamSpec] {
-        static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(|| vec![]);
+        static PROPERTIES: Lazy<Vec<ParamSpec>> = Lazy::new(Vec::new);
         &PROPERTIES
     }
 
@@ -212,13 +211,13 @@ impl StoxDataGrid {
         let symbol = self.symbol_label.borrow().text().to_string();
 
         let x_axis = stox_get_chart_x_axis(symbol.clone(), "1d");
-        if !x_axis.is_ok() {
+        if x_axis.is_err() {
             return;
         }
         let x_axis = x_axis.unwrap();
 
         let y_axis = stox_get_chart_y_axis(symbol.clone());
-        if !y_axis.is_ok() {
+        if y_axis.is_err() {
             return;
         }
         let y_axis = y_axis.unwrap();
@@ -231,7 +230,7 @@ impl StoxDataGrid {
             .take()
             .append_page(&drawing_area, Some(&Label::new(Some("1D"))));
 
-        drawing_area.set_draw_func(move |drawing_area, cr, width, height| {
+        drawing_area.set_draw_func(move |_drawing_area, cr, width, height| {
             let mut x_iter = x_axis.iter();
             let mut y_iter = y_axis.iter();
             cr.set_source_rgb(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0); // Background color
@@ -241,9 +240,9 @@ impl StoxDataGrid {
             cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0); // Set the grid lines color
             let mut x_points: Vec<i32> = vec![];
             let mut y_points: Vec<i32> = vec![];
-            for x_grid_line in (0..(width)).step_by(width as usize / 8 as usize) {
+            for x_grid_line in (0..(width)).step_by(width as usize / 8_usize) {
                 cr.move_to(x_grid_line as f64, height as f64 - 20.0);
-                cr.line_to(x_grid_line as f64, (-1 * height) as f64);
+                cr.line_to(x_grid_line as f64, -height as f64);
                 cr.stroke().unwrap();
                 x_points.push(x_grid_line);
 
@@ -251,7 +250,7 @@ impl StoxDataGrid {
                 cr.show_text(x_iter.next().unwrap()).unwrap();
             }
 
-            for y_grid_line in (0..(height)).step_by(height as usize / 4 as usize).rev() {
+            for y_grid_line in (0..(height)).step_by(height as usize / 4_usize).rev() {
                 cr.move_to(0.0, y_grid_line as f64);
                 cr.line_to(width as f64, y_grid_line as f64);
                 cr.stroke().unwrap();
@@ -271,8 +270,8 @@ impl StoxDataGrid {
             for i in (0..=width).step_by(width as usize / lines_step) {
                 let next = quote_iter.next();
                 // if we hit None, we are done
-                if next != None {
-                    cr.line_to(i as f64, *next.unwrap());
+                if let Some(next) = next {
+                    cr.line_to(i as f64, *next);
                     cr.line_to(i as f64, height as f64);
                     cr.stroke().unwrap();
                 }
