@@ -215,7 +215,7 @@ impl BoxImpl for StoxDataGrid {}
 impl WidgetImpl for StoxDataGrid {}
 
 impl StoxDataGrid {
-    pub fn construct_graph(&self) {
+    pub fn construct_graph(&self, info: ExtendedInfo) {
         let symbol = self.symbol_label.borrow().text().to_string();
 
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
@@ -249,14 +249,10 @@ impl StoxDataGrid {
 
         receiver.attach(
             None,
-            clone!(@strong self.notebook as notebook, @strong self.market_change_label as market_change_label => @default-panic, move |data| {
+            clone!(@strong self.notebook as notebook => @default-panic, move |data| {
                 if let Some((x_axis, y_axis, mut quotes)) = data {
                     let drawing_area = DrawingArea::new();
-                    let mut growth = true;
-
-                    if market_change_label.borrow().text().starts_with("-") {
-                        growth = false;
-                    }
+                    let neg_market_change = info.market_change_neg();
 
                     notebook.borrow_mut().append_page(&drawing_area, Some(&Label::new(Some("1D"))));
 
@@ -297,10 +293,8 @@ impl StoxDataGrid {
                                 .unwrap();
                         }
 
-                        // Green for growth
-                        if growth {
-                            cr.set_source_rgb(0.0, 255.0, 0.0);
-                        } else {
+                        cr.set_source_rgb(0.0, 255.0, 0.0);
+                        if neg_market_change {
                             cr.set_source_rgb(255.0, 0.0, 0.0);
                         }
 

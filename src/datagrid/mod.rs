@@ -77,41 +77,43 @@ impl StoxDataGrid {
         market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
 
-        receiver.attach(None, move |complete_info| {
-            match complete_info {
-                Some((main_info, extended_info)) => {
-                    name_label.set_label(&main_info.short_name);
-                    latest_quote.set_label(&main_info.last_quote);
-                    market_change_label.set_label(&format!(
-                        "{} ({}%)",
-                        &extended_info.market_change, &extended_info.market_change_percent
-                    ));
+        receiver.attach(
+            None,
+            clone!(@strong self as this => move |complete_info| {
+                match complete_info {
+                    Some((main_info, extended_info)) => {
+                        name_label.set_label(&main_info.short_name);
+                        latest_quote.set_label(&main_info.last_quote);
+                        market_change_label.set_label(&format!(
+                            "{} ({}%)",
+                            &extended_info.market_change, &extended_info.market_change_percent
+                        ));
 
-                    if extended_info.market_change_neg() {
-                        market_change_label.set_css_classes(&["market_change_neg"]);
-                    } else {
-                        market_change_label.set_css_classes(&["market_change_pos"]);
+                        if extended_info.market_change_neg() {
+                            market_change_label.set_css_classes(&["market_change_neg"]);
+                        } else {
+                            market_change_label.set_css_classes(&["market_change_pos"]);
+                        }
+
+                        info_label.set_label(&format!(
+                            "{} - {}",
+                            extended_info.exchange_name, main_info.currency
+                        ));
+                        this.imp().construct_graph(extended_info);
                     }
-
-                    info_label.set_label(&format!(
-                        "{} - {}",
-                        extended_info.exchange_name, main_info.currency
-                    ));
+                    None => {
+                        name_label.set_label("???");
+                        latest_quote.set_label("???");
+                        market_change_label.set_label("???");
+                        info_label.set_label("???");
+                    }
                 }
-                None => {
-                    name_label.set_label("???");
-                    latest_quote.set_label("???");
-                    market_change_label.set_label("???");
-                    info_label.set_label("???");
-                }
-            }
 
-            drop(lock.replace(None));
+                drop(lock.replace(None));
 
-            Continue(false)
-        });
-
-        self.imp().construct_graph();
+                Continue(false)
+            }),
+        );
 
         false
     }
