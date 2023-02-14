@@ -249,9 +249,14 @@ impl StoxDataGrid {
 
         receiver.attach(
             None,
-            clone!(@strong self.notebook as notebook => @default-panic, move |data| {
+            clone!(@strong self.notebook as notebook, @strong self.market_change_label as market_change_label => @default-panic, move |data| {
                 if let Some((x_axis, y_axis, mut quotes)) = data {
                     let drawing_area = DrawingArea::new();
+                    let mut growth = true;
+
+                    if market_change_label.borrow().text().starts_with("-") {
+                        growth = false;
+                    }
 
                     notebook.borrow_mut().append_page(&drawing_area, Some(&Label::new(Some("1D"))));
 
@@ -292,7 +297,12 @@ impl StoxDataGrid {
                                 .unwrap();
                         }
 
-                        cr.set_source_rgb(0.0, 255.0, 0.0);
+                        // Green for growth
+                        if growth == true {
+                            cr.set_source_rgb(0.0, 255.0, 0.0);
+                        } else {
+                            cr.set_source_rgb(255.0, 0.0, 0.0);
+                        }
 
                         let mut lines_step = quotes.len();
                         let new_quotes = stox_scale_quotes(&mut quotes, height);
