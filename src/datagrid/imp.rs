@@ -210,77 +210,104 @@ impl StoxDataGrid {
     pub fn construct_graph(&self) {
         let symbol = self.symbol_label.borrow().text().to_string();
 
-        let x_axis = stox_get_chart_x_axis(symbol.clone(), "1d");
-        if x_axis.is_err() {
-            return;
-        }
-        let x_axis = x_axis.unwrap();
+        let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        let y_axis = stox_get_chart_y_axis(symbol.clone());
-        if y_axis.is_err() {
-            return;
-        }
-        let y_axis = y_axis.unwrap();
-
-        let mut quotes = stox_get_quotes(symbol);
-
-        let drawing_area = DrawingArea::new();
-
-        let notebook = self.notebook.borrow_mut();
-
-        for i in 0..notebook.n_pages() {
-            notebook.remove_page(Some(i));
+        {
+            let notebook = self.notebook.borrow_mut();
+            for i in 0..notebook.n_pages() {
+                notebook.remove_page(Some(i));
+            }
         }
 
-        notebook.append_page(&drawing_area, Some(&Label::new(Some("1D"))));
-
-        drawing_area.set_draw_func(move |_drawing_area, cr, width, height| {
-            let mut x_iter = x_axis.iter();
-            let mut y_iter = y_axis.iter();
-            cr.set_source_rgb(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0); // Background color
-            cr.paint().unwrap();
-            cr.set_line_width(1.0);
-
-            cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0); // Set the grid lines color
-            let mut x_points: Vec<i32> = vec![];
-            let mut y_points: Vec<i32> = vec![];
-            for x_grid_line in (0..(width)).step_by(width as usize / 8_usize) {
-                cr.move_to(x_grid_line as f64, height as f64 - 20.0);
-                cr.line_to(x_grid_line as f64, -height as f64);
-                cr.stroke().unwrap();
-                x_points.push(x_grid_line);
-
-                cr.move_to(x_grid_line as f64 - 2.0, height as f64 - 5.0);
-                cr.show_text(x_iter.next().unwrap()).unwrap();
+        std::thread::spawn(move || {
+            let x_axis = stox_get_chart_x_axis(symbol.clone(), "1d");
+            if x_axis.is_err() {
+                sender.send(None).unwrap();
+                return;
             }
+            let x_axis = x_axis.unwrap();
 
-            for y_grid_line in (0..(height)).step_by(height as usize / 4_usize).rev() {
-                cr.move_to(0.0, y_grid_line as f64);
-                cr.line_to(width as f64, y_grid_line as f64);
-                cr.stroke().unwrap();
-                y_points.push(y_grid_line);
-
-                cr.move_to(2.0, y_grid_line as f64);
-                cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
-                    .unwrap();
+            let y_axis = stox_get_chart_y_axis(symbol.clone());
+            if y_axis.is_err() {
+                sender.send(None).unwrap();
+                return;
             }
+            let y_axis = y_axis.unwrap();
 
-            cr.set_source_rgb(0.0, 255.0, 0.0);
-            let lines_step = quotes.len();
-            let new_quotes = stox_scale_quotes(&mut quotes, height);
-            let mut quote_iter = new_quotes.iter().rev(); // reverse or else it is reflected
+            let quotes = stox_get_quotes(symbol);
 
-            cr.move_to(0.0, *quote_iter.next().unwrap()); // start at the first point
-            for i in (0..=width).step_by(width as usize / lines_step) {
-                let next = quote_iter.next();
-                // if we hit None, we are done
-                if let Some(next) = next {
-                    cr.line_to(i as f64, *next);
-                    cr.line_to(i as f64, height as f64);
-                    cr.stroke().unwrap();
-                }
-            }
+            sender.send(Some((x_axis, y_axis, quotes))).unwrap();
         });
-        drawing_area.show();
+
+        receiver.attach(
+            None,
+            clone!(@strong self.notebook as notebook => @default-panic, move |data| {
+                if let Some((x_axis, y_axis, mut quotes)) = data {
+                    let drawing_area = DrawingArea::new();
+
+                    notebook.borrow_mut().append_page(&drawing_area, Some(&Label::new(Some("1D"))));
+
+                    drawing_area.set_draw_func(move |_drawing_area, cr, width, height| {
+                        let mut x_iter = x_axis.iter();
+                        let mut y_iter = y_axis.iter();
+
+                        // Background color
+                        cr.set_source_rgb(56.0 / 255.0, 56.0 / 255.0, 56.0 / 255.0);
+                        cr.paint().unwrap();
+                        cr.set_line_width(1.0);
+
+                        // Set the grid lines color
+                        cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0);
+
+                        let mut x_points: Vec<i32> = vec![];
+                        let mut y_points: Vec<i32> = vec![];
+                        for x_grid_line in (0..width).step_by(width as usize / 8) {
+                            cr.move_to(x_grid_line as f64, height as f64 - 20.0);
+                            cr.line_to(x_grid_line as f64, -height as f64);
+                            cr.stroke().unwrap();
+
+                            x_points.push(x_grid_line);
+
+                            cr.move_to(x_grid_line as f64 - 2.0, height as f64 - 5.0);
+                            cr.show_text(x_iter.next().unwrap()).unwrap();
+                        }
+
+                        for y_grid_line in (0..height).step_by(height as usize / 4).rev() {
+                            cr.move_to(0.0, y_grid_line as f64);
+                            cr.line_to(width as f64, y_grid_line as f64);
+                            cr.stroke().unwrap();
+
+                            y_points.push(y_grid_line);
+
+                            cr.move_to(2.0, y_grid_line as f64);
+                            cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
+                                .unwrap();
+                        }
+
+                        cr.set_source_rgb(0.0, 255.0, 0.0);
+
+                        let lines_step = quotes.len();
+                        let new_quotes = stox_scale_quotes(&mut quotes, height);
+                        let mut quote_iter = new_quotes.iter().rev(); // reverse or else it is reflected
+
+                        cr.move_to(0.0, *quote_iter.next().unwrap()); // start at the first point
+                        for i in (0..=width).step_by(width as usize / lines_step) {
+                            let next = quote_iter.next();
+
+                            // if we hit None, we are done (he )
+                            if let Some(next) = next {
+                                cr.line_to(i as f64, *next);
+                                cr.line_to(i as f64, height as f64);
+                                cr.stroke().unwrap();
+                            }
+                        }
+                    });
+
+                    drawing_area.show();
+                }
+
+                Continue(false)
+            }),
+        );
     }
 }
