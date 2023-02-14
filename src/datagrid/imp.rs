@@ -226,9 +226,13 @@ impl StoxDataGrid {
 
         let drawing_area = DrawingArea::new();
 
-        self.notebook
-            .take()
-            .append_page(&drawing_area, Some(&Label::new(Some("1D"))));
+        let notebook = self.notebook.borrow_mut();
+
+        for i in 0..notebook.n_pages() {
+            notebook.remove_page(Some(i));
+        }
+
+        notebook.append_page(&drawing_area, Some(&Label::new(Some("1D"))));
 
         drawing_area.set_draw_func(move |_drawing_area, cr, width, height| {
             let mut x_iter = x_axis.iter();
