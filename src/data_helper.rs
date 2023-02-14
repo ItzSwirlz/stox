@@ -18,6 +18,7 @@ pub struct ExtendedInfo {
     pub exchange_name: String,
     pub day_range: String,
     pub market_change: String,
+    pub market_change_percent: String,
 }
 
 impl ExtendedInfo {
@@ -90,10 +91,21 @@ pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
         market_change.insert(0, '+');
     }
 
+    let mut market_change_percent = format!(
+        "{:.2}",
+        quote["regularMarketChangePercent"]
+            .as_f64()
+            .context("expected market change percent")?
+    );
+    if !market_change_percent.starts_with('-') {
+        market_change_percent.insert(0, '+');
+    }
+
     Ok(ExtendedInfo {
         exchange_name,
         day_range,
         market_change,
+        market_change_percent,
     })
 }
 

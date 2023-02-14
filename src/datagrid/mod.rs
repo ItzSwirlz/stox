@@ -82,7 +82,10 @@ impl StoxDataGrid {
                 Some((main_info, extended_info)) => {
                     name_label.set_label(&main_info.short_name);
                     latest_quote.set_label(&main_info.last_quote);
-                    market_change_label.set_label(&extended_info.market_change);
+                    market_change_label.set_label(&format!(
+                        "{} ({}%)",
+                        &extended_info.market_change, &extended_info.market_change_percent
+                    ));
 
                     if extended_info.market_change_neg() {
                         market_change_label.set_css_classes(&["market_change_neg"]);
