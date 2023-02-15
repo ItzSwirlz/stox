@@ -302,6 +302,7 @@ impl StoxDataGrid {
                     cr.line_to(i as f64, *next);
                     cr.line_to(i as f64, height as f64);
                     cr.stroke().unwrap();
+                    cr.line_to(i as f64, *next);
                 }
             }
         });
