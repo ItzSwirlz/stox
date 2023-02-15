@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use chrono::prelude::*;
+use chrono::{prelude::*, Days, Duration};
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
 use serde_json::*;
@@ -215,9 +215,9 @@ pub fn stox_get_chart_y_axis(extended_info: &ExtendedInfo) -> Result<Vec<f64>, a
     ])
 }
 
-pub fn stox_get_quotes(symbol: String) -> Vec<f64> {
+pub fn stox_get_quotes(symbol: String, range: &str) -> Vec<f64> {
     let provider = YahooConnector::new();
-    let response = provider.get_latest_quotes(&symbol, "30m").unwrap();
+    let response = provider.get_quote_range(&symbol, "1m", &range).unwrap();
     let mut axis: Vec<f64> = vec![];
     for index_first in response.quotes().into_iter() {
         for index in index_first.iter() {

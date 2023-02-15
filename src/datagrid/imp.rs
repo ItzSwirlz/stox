@@ -235,7 +235,7 @@ impl StoxDataGrid {
             }
             let y_axis = y_axis.unwrap();
 
-            let quotes = stox_get_quotes(symbol);
+            let quotes = stox_get_quotes(symbol, "1d");
 
             sender
                 .send(Some((
