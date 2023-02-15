@@ -98,7 +98,7 @@ pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
         quote["regularMarketChangePercent"]
             .as_f64()
             .context("expected market change percent")?
-    );
+    ) + "%";
     if !market_change_percent.starts_with('-') {
         market_change_percent.insert(0, '+');
     }
