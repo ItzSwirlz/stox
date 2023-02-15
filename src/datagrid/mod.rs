@@ -11,7 +11,7 @@ use gtk4::traits::WidgetExt;
 
 use lazy_static::lazy_static;
 
-use crate::data_helper::stox_get_complete_info;
+use crate::data_helper::{stox_get_complete_info, stox_get_quotes};
 
 glib::wrapper! {
     pub struct StoxDataGrid(ObjectSubclass<imp::StoxDataGrid>)
@@ -61,7 +61,15 @@ impl StoxDataGrid {
 
         std::thread::spawn(move || match stox_get_complete_info(&symbol.borrow()) {
             Ok((main_info, extended_info)) => {
-                sender.send(Some((main_info, extended_info))).unwrap()
+                let quotes = stox_get_quotes(symbol.borrow().to_string(), "1d");
+                if quotes.is_err() {
+                    sender.send(None).unwrap();
+                    return;
+                }
+
+                sender
+                    .send(Some((main_info, extended_info, quotes.unwrap())))
+                    .unwrap()
             }
             Err(_) => sender.send(None).unwrap(),
         });
@@ -88,7 +96,7 @@ impl StoxDataGrid {
             None,
             clone!(@strong self as this => move |complete_info| {
                 match complete_info {
-                    Some((main_info, extended_info)) => {
+                    Some((main_info, extended_info, quotes)) => {
                         name_label.set_label(&main_info.short_name);
                         latest_quote.set_label(&main_info.last_quote);
                         market_change_label.set_label(&format!(
@@ -107,7 +115,7 @@ impl StoxDataGrid {
                             extended_info.exchange_name, main_info.currency
                         ));
 
-                        this.imp().construct_graph(main_info, extended_info);
+                        this.imp().construct_graph(main_info, extended_info, quotes);
                     }
                     None => {
                         name_label.set_label("???");

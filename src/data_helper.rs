@@ -1,8 +1,7 @@
 use anyhow::{Context, Result};
-use chrono::{prelude::*, Days, Duration};
+use chrono::prelude::*;
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
-use serde_json::*;
 use yahoo::YahooConnector;
 use yahoo::*;
 use yahoo_finance_api as yahoo;
@@ -35,7 +34,7 @@ pub fn stox_search_symbol(symbol: &str) -> Result<Vec<YQuoteItem>, anyhow::Error
 }
 
 pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
-    let provider = yahoo::YahooConnector::new();
+    let provider = YahooConnector::new();
     let latest_quotes = provider.get_latest_quotes(symbol, "1h")?;
 
     let last_quote = latest_quotes.last_quote()?.close;
@@ -71,7 +70,7 @@ pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
     );
 
     let data = reqwest::blocking::get(url)?.text()?;
-    let data: Value = serde_json::from_str(&data)?;
+    let data: serde_json::Value = serde_json::from_str(&data)?;
 
     let quote = &data["optionChain"]["result"][0]["quote"];
 
@@ -117,7 +116,7 @@ pub fn stox_get_complete_info(symbol: &str) -> Result<(MainInfo, ExtendedInfo)> 
 }
 
 pub fn stox_get_ranges(symbol: String) -> Vec<String> {
-    let provider = yahoo::YahooConnector::new();
+    let provider = YahooConnector::new();
     let valid_ranges = &provider
         .get_latest_quotes(&symbol, "1h")
         .unwrap()
@@ -215,10 +214,12 @@ pub fn stox_get_chart_y_axis(extended_info: &ExtendedInfo) -> Result<Vec<f64>, a
     ])
 }
 
-pub fn stox_get_quotes(symbol: String, range: &str) -> Vec<f64> {
+pub fn stox_get_quotes(symbol: String, range: &str) -> Result<Vec<f64>, anyhow::Error> {
     let provider = YahooConnector::new();
-    let response = provider.get_quote_range(&symbol, "1m", &range).unwrap();
+    let response = provider.get_quote_range(&symbol, "1m", &range)?;
+
     let mut axis: Vec<f64> = vec![];
+
     for index_first in response.quotes().into_iter() {
         for index in index_first.iter() {
             let quote = index.close;
@@ -226,7 +227,8 @@ pub fn stox_get_quotes(symbol: String, range: &str) -> Vec<f64> {
             axis.push(quote);
         }
     }
-    axis
+
+    Ok(axis)
 }
 
 pub fn stox_scale_quotes(quotes: &mut [f64], height: i32) -> Vec<f64> {
