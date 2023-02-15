@@ -78,6 +78,7 @@ impl StoxDataGrid {
         let latest_quote = self.imp().latest_quote.borrow().clone();
         let market_change_label = self.imp().market_change_label.borrow().clone();
         let info_label = self.imp().info_label.borrow().clone();
+        let notebook = self.imp().notebook.borrow().clone();
 
         name_label.set_label("--");
         latest_quote.set_label("--");
@@ -122,6 +123,11 @@ impl StoxDataGrid {
                         latest_quote.set_label("???");
                         market_change_label.set_label("???");
                         info_label.set_label("???");
+
+                        notebook.append_page(
+                            &Label::new(Some("The graph could not be loaded.")),
+                            Some(&Label::new(Some("Error"))),
+                        );
                     }
                 }
 
