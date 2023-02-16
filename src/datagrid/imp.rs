@@ -10,6 +10,8 @@ use crate::data_helper::*;
 
 use once_cell::sync::Lazy;
 
+use gettextrs::gettext;
+
 #[derive(Default)]
 pub struct StoxDataGrid {
     pub symbol_label: RefCell<Label>,
@@ -145,7 +147,7 @@ impl ObjectImpl for StoxDataGrid {
             let star_img = Image::from_icon_name("non-starred");
             save_btn_box.append(&star_img);
 
-            let save_label = Label::new(Some("Save"));
+            let save_label = Label::new(Some(&gettext("Save")));
             save_btn_box.append(&save_label);
 
             let save_btn = Button::builder().child(&save_btn_box).build();
@@ -162,7 +164,7 @@ impl ObjectImpl for StoxDataGrid {
             let star_img = Image::from_icon_name("starred");
             unsave_btn_box.append(&star_img);
 
-            let unsave_label = Label::new(Some("Unsave"));
+            let unsave_label = Label::new(Some(&gettext("Unsave")));
             unsave_btn_box.append(&unsave_label);
 
             let unsave_btn = Button::builder().child(&unsave_btn_box).build();
@@ -179,7 +181,7 @@ impl ObjectImpl for StoxDataGrid {
             let refresh_img = Image::from_icon_name("view-refresh");
             refresh_btn_box.append(&refresh_img);
 
-            let refresh_label = Label::new(Some("Refresh"));
+            let refresh_label = Label::new(Some(&gettext("Refresh")));
             refresh_btn_box.append(&refresh_label);
 
             let refresh_btn = Button::builder().child(&refresh_btn_box).build();

@@ -6,7 +6,7 @@ fn show_error_dialog(window: &ApplicationWindow, message: &str) {
         .transient_for(window)
         .modal(true)
         .buttons(ButtonsType::Ok)
-        .text("Error")
+        .text(&gettext("Error"))
         .secondary_text(message)
         .message_type(MessageType::Error)
         .build();
