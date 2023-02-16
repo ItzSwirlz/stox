@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Stox
+GenericName=Stocks
+Comment=View financial stocks
+Type=Application
+Exec=stox
+Terminal=false
+Categories=GTK;Finance;Utility;
+Keywords=GTK;Stocks
+# Translators: Do NOT translate or transliterate this text (this is an icon file name)!
+Icon=@icon@
