@@ -22,23 +22,23 @@ msgid ""
 "\n"
 "To prevent data loss, saving and unsaving stocks will be disabled until this "
 "is fixed."
-msgstr ""
+msgstr "Сохраненные запасы не удалось загрузить. Попробуйте перезапустить программу. Чтобы предотвратить потерю данных, сохранение и удаление сохранений будут отключены до тех пор, пока это не будет исправлено."
 
 #: src/dialogs.rs:28
 msgid ""
 "Saving and unsaving stocks is disabled to prevent data loss. Try restarting "
 "the app."
-msgstr ""
+msgstr "Сохранение и несохранение запасов отключено, чтобы предотвратить потерю данных. Попробуйте перезапустить программу."
 
 #: src/dialogs.rs:35
 msgid ""
 "An error occurred and the stock could not be saved. Try saving it again."
-msgstr ""
+msgstr "Произошла ошибка, и фонд не удалось восстановить. Попробуйте сохранить еще раз."
 
 #: src/dialogs.rs:42
 msgid ""
 "An error occured and the stock could not be unsaved. Try unsaving it again."
-msgstr ""
+msgstr "Произошла ошибка, и фонд не удалось восстановить. Попробуйте удалить сохранение еще раз."
 
 #: src/main.rs:101
 msgid "Search for a symbol..."
