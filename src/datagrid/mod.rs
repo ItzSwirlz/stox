@@ -13,6 +13,8 @@ use lazy_static::lazy_static;
 
 use crate::data_helper::{stox_get_complete_info, stox_get_quotes};
 
+use gettextrs::gettext;
+
 glib::wrapper! {
     pub struct StoxDataGrid(ObjectSubclass<imp::StoxDataGrid>)
         @extends Box, Widget,
@@ -125,8 +127,8 @@ impl StoxDataGrid {
                         info_label.set_label("???");
 
                         notebook.append_page(
-                            &Label::new(Some("The graph could not be loaded.")),
-                            Some(&Label::new(Some("Error"))),
+                            &Label::new(Some(&gettext("The graph could not be loaded."))),
+                            Some(&Label::new(Some(&gettext("Error")))),
                         );
                     }
                 }
