@@ -251,35 +251,6 @@ impl StoxDataGrid {
             cr.paint().unwrap();
             cr.set_line_width(1.0);
 
-            // Set the grid lines color
-            #[allow(clippy::eq_op)]
-            cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0);
-
-            let mut x_points: Vec<i32> = vec![];
-            let mut y_points: Vec<i32> = vec![];
-            for x_grid_line in (0..width).step_by(width as usize / 8) {
-                cr.move_to(x_grid_line as f64, height as f64 - 20.0);
-                cr.line_to(x_grid_line as f64, -height as f64);
-                cr.stroke().unwrap();
-
-                x_points.push(x_grid_line);
-
-                cr.move_to(x_grid_line as f64 - 2.0, height as f64 - 5.0);
-                cr.show_text(x_iter.next().unwrap()).unwrap();
-            }
-
-            for y_grid_line in (0..height).step_by(height as usize / 4).rev() {
-                cr.move_to(0.0, y_grid_line as f64);
-                cr.line_to(width as f64, y_grid_line as f64);
-                cr.stroke().unwrap();
-
-                y_points.push(y_grid_line);
-
-                cr.move_to(2.0, y_grid_line as f64);
-                cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
-                    .unwrap();
-            }
-
             cr.set_source_rgb(0.0, 255.0, 0.0);
             if extended_info.market_change_neg() {
                 cr.set_source_rgb(255.0, 0.0, 0.0);
@@ -306,6 +277,29 @@ impl StoxDataGrid {
                     cr.stroke().unwrap();
                     cr.line_to(i as f64, *next);
                 }
+            }
+
+            // Set the grid lines color
+            #[allow(clippy::eq_op)]
+            cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0);
+
+            for x_grid_line in (0..width).step_by(width as usize / 8) {
+                cr.move_to(x_grid_line as f64, height as f64 - 20.0);
+                cr.line_to(x_grid_line as f64, -height as f64);
+                cr.stroke().unwrap();
+
+                cr.move_to(x_grid_line as f64 - 2.0, height as f64 - 5.0);
+                cr.show_text(x_iter.next().unwrap()).unwrap();
+            }
+
+            for y_grid_line in (0..height).step_by(height as usize / 4).rev() {
+                cr.move_to(0.0, y_grid_line as f64);
+                cr.line_to(width as f64, y_grid_line as f64);
+                cr.stroke().unwrap();
+
+                cr.move_to(2.0, y_grid_line as f64);
+                cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
+                    .unwrap();
             }
         });
 
