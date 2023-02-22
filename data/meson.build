@@ -28,6 +28,25 @@ if desktop_file_validate.found()
   )
 endif
 
+gschema_conf = configuration_data()
+configure_file(
+  input: 'org.itzswirlz.stox.gschema.xml.in',
+  output: 'org.itzswirlz.stox.gschema.xml',
+  configuration: gschema_conf,
+  install: true,
+  install_dir: datadir / 'glib-2.0' / 'schemas'
+)
+
+# Validata GSchema
+if glib_compile_schemas.found()
+  test(
+    'validate-gschema', glib_compile_schemas,
+    args: [
+      '--strict', '--dry-run', meson.current_source_dir()
+    ]
+  )
+endif
+
 resources = gnome.compile_resources(
     'resources',
     'resources.gresource.xml',

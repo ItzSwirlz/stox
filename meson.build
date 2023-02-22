@@ -9,6 +9,7 @@ gtk4 = dependency('gtk4')
 
 cargo = find_program('cargo', required: true)
 desktop_file_validate = find_program('desktop-file-validate', required: false)
+glib_compile_schemas = find_program('glib-compile-schemas', required: true)
 
 prefix = get_option('prefix')
 bindir = prefix / get_option('bindir')

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<schemalist>
+  <schema id="org.itzswirlz.stox" path="/org/itzswirlz/Stox/">
+    <key name="sidebar-show-separators" type="b">
+      <default>true</default>
+      <summary>Show separators between stock tickers in the sidebar.</summary>
+    </key>
+  </schema>
+</schemalist>

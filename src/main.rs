@@ -51,6 +51,7 @@ fn main() {
 }
 
 fn build_ui(app: &Application) {
+    let settings = gio::Settings::new(APP_ID);
     let mut error_loading_saved_stocks = false;
 
     let mut saved_stocks = read_saved_stocks();
@@ -124,9 +125,14 @@ fn build_ui(app: &Application) {
         .child(&searchbar)
         .build();
 
+    let sidebar_show_separators = settings.boolean("sidebar-show-separators");
+
     let sidebar = ListBox::new();
     sidebar.set_height_request(800);
     sidebar.append(&searchbar_row);
+    if sidebar_show_separators {
+        sidebar.set_show_separators(true);
+    }
 
     let sidebar_symbols: Arc<Mutex<Vec<StoxSidebarItem>>> = Arc::new(Mutex::new(Vec::new()));
     for ticker in &*saved_stocks.borrow() {
