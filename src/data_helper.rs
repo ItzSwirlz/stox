@@ -216,7 +216,7 @@ pub fn stox_get_chart_y_axis(extended_info: &ExtendedInfo) -> Result<Vec<f64>, a
 
 pub fn stox_get_quotes(symbol: String, range: &str) -> Result<Vec<f64>, anyhow::Error> {
     let provider = YahooConnector::new();
-    let response = provider.get_quote_range(&symbol, "1m", &range)?;
+    let response = provider.get_quote_range(&symbol, "1m", range)?;
 
     let mut axis: Vec<f64> = vec![];
 

@@ -88,6 +88,15 @@ impl StoxDataGrid {
         market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
 
+
+        let save_btn = self.imp().save_btn.borrow().clone();
+        let unsave_btn = self.imp().unsave_btn.borrow().clone();
+        let refresh_btn = self.imp().refresh_btn.borrow().clone();
+
+        save_btn.set_sensitive(false);
+        unsave_btn.set_sensitive(false);
+        refresh_btn.set_sensitive(false);
+
         {
             let notebook = self.imp().notebook.borrow_mut();
             for i in 0..notebook.n_pages() {
@@ -132,6 +141,10 @@ impl StoxDataGrid {
                         );
                     }
                 }
+
+                save_btn.set_sensitive(true);
+                unsave_btn.set_sensitive(true);
+                refresh_btn.set_sensitive(true);
 
                 drop(lock.replace(None));
 
