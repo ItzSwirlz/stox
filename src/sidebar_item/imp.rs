@@ -151,6 +151,12 @@ impl StoxSidebarItem {
                                 + &symbol_label.text()
                                 + "</span>"),
                         );
+                    } else if main_info.instrument_type == "ETF" {
+                        symbol_label.set_markup(
+                            &("<span foreground=\"#3584e4\">".to_owned()
+                                + &symbol_label.text()
+                                + "</span>"),
+                        );
                     }
                 }
                 None => {
