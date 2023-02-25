@@ -116,6 +116,7 @@ impl StoxSidebarItem {
         symbol_label: Label,
         market_change_label: Label,
     ) {
+        let settings = gio::Settings::new(crate::APP_ID);
         if symbol.is_empty() {
             return;
         }
@@ -145,13 +146,13 @@ impl StoxSidebarItem {
                         market_change_label.set_css_classes(&["market_change_pos"]);
                     }
 
-                    if main_info.instrument_type == "FUTURE" {
+                    if main_info.instrument_type == "FUTURE" && settings.boolean("sidebar-color-futures") {
                         symbol_label.set_markup(
                             &("<span foreground=\"#2ec27e\">".to_owned()
                                 + &symbol_label.text()
                                 + "</span>"),
                         );
-                    } else if main_info.instrument_type == "ETF" {
+                    } else if main_info.instrument_type == "ETF"  && settings.boolean("sidebar-color-etfs") {
                         symbol_label.set_markup(
                             &("<span foreground=\"#3584e4\">".to_owned()
                                 + &symbol_label.text()

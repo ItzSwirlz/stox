@@ -25,7 +25,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::{panic, sync::*};
 
-const APP_ID: &str = "org.itzswirlz.stox";
+pub const APP_ID: &str = "org.itzswirlz.stox";
 
 fn main() {
     setlocale(LocaleCategory::LcAll, "");
