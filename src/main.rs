@@ -138,8 +138,8 @@ fn build_ui(app: &Application) {
     }
 
     let sidebar_symbols: Arc<Mutex<Vec<StoxSidebarItem>>> = Arc::new(Mutex::new(Vec::new()));
-    for ticker in &*saved_stocks.borrow() {
-        let sidebar_item = StoxSidebarItem::new(ticker, false);
+    for symbol in &*saved_stocks.borrow() {
+        let sidebar_item = StoxSidebarItem::new(symbol, false);
         sidebar_item.show();
         sidebar.append(&sidebar_item);
         sidebar_symbols.lock().unwrap().push(sidebar_item);
