@@ -146,18 +146,14 @@ impl StoxSidebarItem {
                         market_change_label.set_css_classes(&["market_change_pos"]);
                     }
 
-                    if main_info.instrument_type == "FUTURE" && settings.boolean("sidebar-color-futures") {
-                        symbol_label.set_markup(
-                            &("<span foreground=\"#2ec27e\">".to_owned()
-                                + &symbol_label.text()
-                                + "</span>"),
-                        );
-                    } else if main_info.instrument_type == "ETF"  && settings.boolean("sidebar-color-etfs") {
-                        symbol_label.set_markup(
-                            &("<span foreground=\"#3584e4\">".to_owned()
-                                + &symbol_label.text()
-                                + "</span>"),
-                        );
+                    if main_info.instrument_type == "FUTURE"
+                        && settings.boolean("sidebar-color-futures")
+                    {
+                        symbol_label.add_css_class("symbol_future");
+                    } else if main_info.instrument_type == "ETF"
+                        && settings.boolean("sidebar-color-etfs")
+                    {
+                        symbol_label.add_css_class("symbol_etf");
                     }
                 }
                 None => {

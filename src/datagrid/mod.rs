@@ -48,6 +48,7 @@ impl StoxDataGrid {
         }
 
         symbol_label.set_label(&symbol);
+        symbol_label.set_css_classes(&[]);
 
         if is_saved {
             self.imp().save_btn.borrow().hide();

@@ -94,6 +94,14 @@ fn build_ui(app: &Application) {
             .market_change_neg {
                 color: #dc143c;
             }
+
+            .symbol_future {
+                color: #2ec27e;
+            }
+
+            .symbol_etf {
+                color: #3584e4;
+            }
         ",
     );
 
