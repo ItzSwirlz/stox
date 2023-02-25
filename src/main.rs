@@ -62,6 +62,10 @@ fn build_ui(app: &Application) {
 
     let saved_stocks = Rc::new(RefCell::new(saved_stocks.unwrap()));
 
+    app.connect_shutdown(clone!(@weak saved_stocks => move |_| {
+        write_saved_stocks((*saved_stocks.borrow()).to_vec()).ok();
+    }));
+
     let css_provider = CssProvider::new();
     css_provider.load_from_data(
         "

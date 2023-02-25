@@ -88,7 +88,6 @@ impl StoxDataGrid {
         market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
 
-
         let save_btn = self.imp().save_btn.borrow().clone();
         let unsave_btn = self.imp().unsave_btn.borrow().clone();
         let refresh_btn = self.imp().refresh_btn.borrow().clone();
