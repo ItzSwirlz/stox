@@ -5,17 +5,15 @@ edition = "2021"
 
 [dependencies]
 chrono = "0.4.23"
-glib = "0.16.7"
-gtk4 = "0.5.5"
-once_cell = "1.17.0"
-tokio = { version = "1", features = ["full"] }
-yahoo_finance_api = { version = "1.3.0", features = ["blocking"] }
+glib = "0.17.2"
+gtk4 = "0.6.2"
+yahoo_finance_api = { version = "1.4.0", features = ["blocking"] }
 rusty-money = "0.4.1"
-rust_decimal = "1.28.0"
+rust_decimal = "1.28.1"
 gettext-rs = "0.7.0"
-anyhow = "1.0.68"
+anyhow = "1.0.69"
 serde = "1.0.152"
-toml = "0.7.1"
+toml = "0.7.2"
 lazy_static = "1.4.0"
 reqwest = "0.11.14"
 serde_json = "1.0.93"

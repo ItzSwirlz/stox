@@ -94,8 +94,7 @@ fn build_ui(app: &Application) {
             .market_change_neg {
                 color: #dc143c;
             }
-        "
-        .as_bytes(),
+        ",
     );
 
     StyleContext::add_provider_for_display(
