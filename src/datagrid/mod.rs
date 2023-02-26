@@ -78,13 +78,13 @@ impl StoxDataGrid {
         });
 
         let name_label = self.imp().name_label.borrow().clone();
-        let latest_quote = self.imp().latest_quote.borrow().clone();
+        let latest_quote_label = self.imp().latest_quote_label.borrow().clone();
         let market_change_label = self.imp().market_change_label.borrow().clone();
         let info_label = self.imp().info_label.borrow().clone();
         let notebook = self.imp().notebook.borrow().clone();
 
         name_label.set_label("--");
-        latest_quote.set_label("--");
+        latest_quote_label.set_label("--");
         market_change_label.set_label("--");
         market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
@@ -110,7 +110,7 @@ impl StoxDataGrid {
                 match complete_info {
                     Some((main_info, extended_info, quotes)) => {
                         name_label.set_label(&main_info.short_name);
-                        latest_quote.set_label(&main_info.last_quote);
+                        latest_quote_label.set_label(&main_info.last_quote);
                         market_change_label.set_label(&format!(
                             "{} ({})",
                             &extended_info.market_change, &extended_info.market_change_percent
@@ -131,7 +131,7 @@ impl StoxDataGrid {
                     }
                     None => {
                         name_label.set_label("???");
-                        latest_quote.set_label("???");
+                        latest_quote_label.set_label("???");
                         market_change_label.set_label("???");
                         info_label.set_label("???");
 
