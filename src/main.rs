@@ -51,6 +51,14 @@ fn main() {
 }
 
 fn build_ui(app: &Application) {
+    {
+        let windows = app.windows();
+        if windows.len() > 0 {
+            windows[0].present();
+            return;
+        }
+    }
+
     let settings = gio::Settings::new(APP_ID);
     let mut error_loading_saved_stocks = false;
 
