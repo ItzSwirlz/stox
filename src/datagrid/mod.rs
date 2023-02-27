@@ -15,6 +15,8 @@ use crate::data_helper::{stox_get_complete_info, stox_get_quotes};
 
 use gettextrs::gettext;
 
+use self::imp::{GRID_WIDTH, SYMBOL_LABEL_MARGIN_END};
+
 glib::wrapper! {
     pub struct StoxDataGrid(ObjectSubclass<imp::StoxDataGrid>)
         @extends Box, Widget,
@@ -23,6 +25,48 @@ glib::wrapper! {
 
 lazy_static! {
     static ref UPDATE_LOCK: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
+}
+
+macro_rules! pixel_width {
+    ($layout:expr) => {
+        $layout.pixel_size().0
+    };
+}
+
+const ELLIPSIS: &str = "\u{2026}";
+
+fn set_label_with_max_width(label: &Label, text: &str, max_width: i32) -> i32 {
+    // This is inefficient but it should be fine because it isn't run often and
+    // the loop is only executed when there is an unusually long string to show.
+
+    let mut text = text.to_string();
+
+    let layout = label.layout();
+    layout.set_width(max_width * pango::SCALE);
+    layout.set_ellipsize(pango::EllipsizeMode::End);
+    layout.set_text(&text);
+
+    label.set_tooltip_text(None);
+
+    let mut ellipsized = false;
+
+    while layout.is_ellipsized() || pixel_width!(layout) > max_width {
+        if !ellipsized {
+            label.set_tooltip_text(Some(&text));
+            ellipsized = true;
+        }
+
+        text.pop();
+        layout.set_text(&(text.clone() + ELLIPSIS));
+    }
+
+    if ellipsized {
+        text.push_str(ELLIPSIS);
+    }
+
+    label.set_label(&text);
+
+    pixel_width!(layout)
 }
 
 impl StoxDataGrid {
@@ -47,9 +91,6 @@ impl StoxDataGrid {
             return false;
         }
 
-        symbol_label.set_label(&symbol);
-        symbol_label.set_css_classes(&[]);
-
         if is_saved {
             self.imp().save_btn.borrow().hide();
             self.imp().unsave_btn.borrow().show();
@@ -62,21 +103,24 @@ impl StoxDataGrid {
 
         let symbol = RefCell::new(symbol);
 
-        std::thread::spawn(move || match stox_get_complete_info(&symbol.borrow()) {
-            Ok((main_info, extended_info)) => {
-                let quotes = stox_get_quotes(symbol.borrow().to_string(), "1d");
-                if quotes.is_err() {
-                    sender.send(None).unwrap();
-                    return;
+        std::thread::spawn(clone!(
+            @strong symbol => move || match stox_get_complete_info(&symbol.borrow()) {
+                Ok((main_info, extended_info)) => {
+                    let quotes = stox_get_quotes(symbol.borrow().to_string(), "1d");
+                    if quotes.is_err() {
+                        sender.send(None).unwrap();
+                        return;
+                    }
+
+                    sender
+                        .send(Some((main_info, extended_info, quotes.unwrap())))
+                        .unwrap()
                 }
-
-                sender
-                    .send(Some((main_info, extended_info, quotes.unwrap())))
-                    .unwrap()
+                Err(_) => sender.send(None).unwrap(),
             }
-            Err(_) => sender.send(None).unwrap(),
-        });
+        ));
 
+        let symbol_label = self.imp().symbol_label.borrow().clone();
         let name_label = self.imp().name_label.borrow().clone();
         let latest_quote_label = self.imp().latest_quote_label.borrow().clone();
         let market_change_label = self.imp().market_change_label.borrow().clone();
@@ -88,6 +132,16 @@ impl StoxDataGrid {
         market_change_label.set_label("--");
         market_change_label.set_css_classes(&[]);
         info_label.set_label("--");
+
+        set_label_with_max_width(
+            &symbol_label,
+            &symbol.borrow(),
+            GRID_WIDTH
+                - SYMBOL_LABEL_MARGIN_END
+                - pixel_width!(latest_quote_label.layout())
+                - pixel_width!(name_label.layout()),
+        );
+        symbol_label.set_css_classes(&[]);
 
         let save_btn = self.imp().save_btn.borrow().clone();
         let unsave_btn = self.imp().unsave_btn.borrow().clone();
@@ -106,14 +160,13 @@ impl StoxDataGrid {
 
         receiver.attach(
             None,
-            clone!(@strong self as this => move |complete_info| {
+            clone!(@strong self as this, @strong symbol => move |complete_info| {
                 match complete_info {
                     Some((main_info, extended_info, quotes)) => {
-                        name_label.set_label(&main_info.short_name);
                         latest_quote_label.set_label(&main_info.last_quote);
                         market_change_label.set_label(&format!(
                             "{} ({})",
-                            &extended_info.market_change, &extended_info.market_change_percent
+                            &extended_info.market_change, &extended_info.market_change_percent,
                         ));
 
                         if extended_info.market_change_neg() {
@@ -121,6 +174,23 @@ impl StoxDataGrid {
                         } else {
                             market_change_label.set_css_classes(&["market_change_pos"]);
                         }
+
+                        let quote_box_width = std::cmp::max(
+                            pixel_width!(market_change_label.layout()),
+                            pixel_width!(latest_quote_label.layout()),
+                        );
+                        let remaining_width = GRID_WIDTH - SYMBOL_LABEL_MARGIN_END - quote_box_width;
+
+                        let symbol_label_width = set_label_with_max_width(
+                            &symbol_label,
+                            &symbol.borrow(),
+                            remaining_width / 2,
+                        );
+                        set_label_with_max_width(
+                            &name_label,
+                            &main_info.short_name,
+                            remaining_width - symbol_label_width,
+                        );
 
                         info_label.set_label(&format!(
                             "{} - {}",
@@ -134,6 +204,14 @@ impl StoxDataGrid {
                         latest_quote_label.set_label("???");
                         market_change_label.set_label("???");
                         info_label.set_label("???");
+
+                        set_label_with_max_width(
+                            &symbol_label,
+                            &symbol.borrow(),
+                            GRID_WIDTH - SYMBOL_LABEL_MARGIN_END
+                                - pixel_width!(latest_quote_label.layout())
+                                - pixel_width!(name_label.layout()),
+                        );
 
                         notebook.append_page(
                             &Label::new(Some(&gettext("The graph could not be loaded."))),

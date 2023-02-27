@@ -25,6 +25,9 @@ pub struct StoxDataGrid {
     pub notebook: RefCell<Notebook>,
 }
 
+pub const GRID_WIDTH: i32 = 850;
+pub const SYMBOL_LABEL_MARGIN_END: i32 = 10;
+
 #[glib::object_subclass]
 impl ObjectSubclass for StoxDataGrid {
     const NAME: &'static str = "StoxDataGrid";
@@ -39,17 +42,11 @@ impl ObjectImpl for StoxDataGrid {
     }
 
     fn set_property(&self, _id: usize, _value: &Value, _pspec: &ParamSpec) {
-        match _pspec.name() {
-            _ => {
-                self.constructed(); // ensure we reconstruct
-            }
-        }
+        unimplemented!()
     }
 
     fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
-        match _pspec.name() {
-            _ => unimplemented!(),
-        }
+        unimplemented!()
     }
 
     fn constructed(&self) {
@@ -61,7 +58,7 @@ impl ObjectImpl for StoxDataGrid {
 
         let grid = Grid::builder()
             .halign(Align::Center)
-            .width_request(850)
+            .width_request(GRID_WIDTH)
             .margin_start(10)
             .margin_end(10)
             .margin_top(10)
@@ -70,25 +67,25 @@ impl ObjectImpl for StoxDataGrid {
 
         let symbol_label = Label::builder()
             .valign(Align::Baseline)
-            .margin_end(10)
+            .margin_end(SYMBOL_LABEL_MARGIN_END)
             .label("--")
-            .name("symbol")
+            .name("symbol_label")
             .selectable(true)
             .build();
         symbol_label.show();
 
-        let name = Label::builder()
+        let name_label = Label::builder()
             .valign(Align::Baseline)
             .label("--")
-            .name("company_name")
+            .name("name_label")
             .selectable(true)
             .build();
-        name.show();
+        name_label.show();
 
         let info_label = Label::builder()
             .halign(Align::Start)
             .label("--")
-            .name("stock_info")
+            .name("info_label")
             .selectable(true)
             .build();
         info_label.show();
@@ -96,7 +93,7 @@ impl ObjectImpl for StoxDataGrid {
         let latest_quote_label = Label::builder()
             .halign(Align::End)
             .label("--")
-            .name("latest_quote")
+            .name("latest_quote_label")
             .selectable(true)
             .build();
         latest_quote_label.show();
@@ -116,7 +113,7 @@ impl ObjectImpl for StoxDataGrid {
             .build();
 
         grid.attach(&symbol_label, 0, 0, 1, 1);
-        grid.attach(&name, 1, 0, 1, 1);
+        grid.attach(&name_label, 1, 0, 1, 1);
         grid.attach(&info_label, 0, 1, 3, 1);
 
         let quote_box = Box::builder()
@@ -204,7 +201,7 @@ impl ObjectImpl for StoxDataGrid {
         grid.attach(&btns_box, 0, 4, 3, 1);
 
         *self.symbol_label.borrow_mut() = symbol_label;
-        *self.name_label.borrow_mut() = name;
+        *self.name_label.borrow_mut() = name_label;
         *self.latest_quote_label.borrow_mut() = latest_quote_label;
         *self.market_change_label.borrow_mut() = market_change_label;
         *self.info_label.borrow_mut() = info_label;

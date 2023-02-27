@@ -53,13 +53,14 @@ fn main() {
 fn build_ui(app: &Application) {
     {
         let windows = app.windows();
-        if windows.len() > 0 {
+        if !windows.is_empty() {
             windows[0].present();
             return;
         }
     }
 
     let settings = gio::Settings::new(APP_ID);
+
     let mut error_loading_saved_stocks = false;
 
     let mut saved_stocks = read_saved_stocks();
@@ -77,20 +78,20 @@ fn build_ui(app: &Application) {
     let css_provider = CssProvider::new();
     css_provider.load_from_data(
         "
-            #symbol {
+            #symbol_label {
                 font-weight: bold;
                 font-size: 43px;
             }
 
-            #company_name {
+            #name_label {
                 font-size: 28px;
             }
 
-            #latest_quote {
+            #latest_quote_label {
                 font-size: 25px;
             }
 
-            #stock_info {
+            #info_label {
                 font-size: 20px;
                 font-weight: 300;
             }

@@ -7,6 +7,7 @@ edition = "2021"
 chrono = "0.4.23"
 glib = "0.17.2"
 gtk4 = "0.6.2"
+once_cell = "1.17.1"
 yahoo_finance_api = { version = "1.4.0", features = ["blocking"] }
 rusty-money = "0.4.1"
 rust_decimal = "1.28.1"

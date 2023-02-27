@@ -115,18 +115,6 @@ pub fn stox_get_complete_info(symbol: &str) -> Result<(MainInfo, ExtendedInfo)> 
     Ok((stox_get_main_info(symbol)?, stox_get_extended_info(symbol)?))
 }
 
-pub fn stox_get_ranges(symbol: String) -> Vec<String> {
-    let provider = YahooConnector::new();
-    let valid_ranges = &provider
-        .get_latest_quotes(&symbol, "1h")
-        .unwrap()
-        .chart
-        .result[0]
-        .meta
-        .valid_ranges;
-    valid_ranges.to_vec()
-}
-
 pub fn stox_get_chart_x_axis(
     main_info: &MainInfo,
     range: &str,
@@ -183,8 +171,9 @@ pub fn stox_get_chart_x_axis(
                         .to_string();
                     axis.push(year.to_string());
                 }
-                &_ => { // default, something wildly ridiculous
-                     // TODO: Do something!
+                &_ => {
+                    // default, something wildly ridiculous
+                    unimplemented!()
                 }
             }
         }

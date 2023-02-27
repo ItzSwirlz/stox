@@ -51,8 +51,8 @@ impl ObjectImpl for StoxSidebarItem {
         &PROPERTIES
     }
 
-    fn set_property(&self, _id: usize, value: &Value, _pspec: &ParamSpec) {
-        match _pspec.name() {
+    fn set_property(&self, _id: usize, value: &Value, pspec: &ParamSpec) {
+        match pspec.name() {
             "symbol" => {
                 let symbol = value
                     .get::<Option<String>>()
