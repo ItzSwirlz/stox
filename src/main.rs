@@ -342,11 +342,14 @@ fn build_ui(app: &Application) {
         dialogs::show_load_saved_stocks_failed_dialog(&window);
     }
 
-    let header_bar = HeaderBar::new();
-    let title = Label::new(None);
-    title.set_markup("<span weight=\"bold\">Stox</span>");
-    header_bar.set_title_widget(Some(&title));
-    header_bar.set_show_title_buttons(true);
+    let title = Label::builder()
+        .use_markup(true)
+        .label("<span weight=\"bold\">Stox</span>")
+        .build();
+    let header_bar = HeaderBar::builder()
+        .title_widget(&title)
+        .show_title_buttons(true)
+        .build();
 
     window.set_titlebar(Some(&header_bar));
     window.set_application(Some(app));
