@@ -6,7 +6,6 @@ Stox is a WIP application for viewing the stock market with Yahoo Finance.
 
 You will need:
 - The GTK 4 development library
-- OpenSSL (For some specific Yahoo Finance requests)
 - Rust compiler and Cargo
 - Meson and ninja-build
 - Gettext (for translations)

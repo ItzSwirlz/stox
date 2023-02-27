@@ -39,6 +39,8 @@ fn set_label_with_max_width(label: &Label, text: &str, max_width: i32) -> i32 {
     // This is inefficient but it should be fine because it isn't run often and
     // the loop is only executed when there is an unusually long string to show.
 
+    // TODO: This should go from left to right instead of right to left
+
     let mut text = text.to_string();
 
     let layout = label.layout();
