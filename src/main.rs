@@ -131,7 +131,7 @@ fn build_ui(app: &Application) {
 
     let searchbar = SearchEntry::builder()
         .focusable(true)
-        .placeholder_text(&gettext("Search for a symbol..."))
+        .placeholder_text(&gettext("Search for a symbol\u{2026}"))
         .build();
     searchbar.show();
 

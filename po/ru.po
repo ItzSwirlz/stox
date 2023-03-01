@@ -62,5 +62,5 @@ msgid ""
 msgstr "Произошла ошибка, и фонд не удалось восстановить. Попробуйте удалить сохранение еще раз."
 
 #: src/main.rs:113
-msgid "Search for a symbol..."
-msgstr "Найдите биржевой тикер..."
+msgid "Search for a symbol…"
+msgstr "Найдите биржевой тикер…"

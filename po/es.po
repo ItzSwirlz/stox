@@ -63,5 +63,5 @@ msgid ""
 msgstr ""
 
 #: src/main.rs:114
-msgid "Search for a symbol..."
+msgid "Search for a symbol…"
 msgstr ""
