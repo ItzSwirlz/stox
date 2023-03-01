@@ -264,13 +264,14 @@ impl StoxDataGrid {
 
             cr.move_to(0.0, *quote_iter.next().unwrap()); // start at the first point
 
+            // Draw the actual chart and change in quote
             for i in (0..=width).step_by(width as usize / lines_step) {
                 let next = quote_iter.next();
 
                 // if we hit None, we are done
                 if let Some(next) = next {
                     cr.line_to(i as f64, *next);
-                    cr.line_to(i as f64, height as f64);
+                    cr.line_to(i as f64, height as f64 - 5.0);
                     cr.stroke().unwrap();
                     cr.line_to(i as f64, *next);
                 }
@@ -280,15 +281,17 @@ impl StoxDataGrid {
             #[allow(clippy::eq_op)]
             cr.set_source_rgb(255.0 / 255.0, 255.0 / 255.0, 255.0 / 255.0);
 
+            // x-axis (horizontal) lines
             for x_grid_line in (0..width).step_by(width as usize / 8) {
-                cr.move_to(x_grid_line as f64, height as f64 - 20.0);
+                cr.move_to(x_grid_line as f64, height as f64 - 5.0);
                 cr.line_to(x_grid_line as f64, -height as f64);
                 cr.stroke().unwrap();
 
-                cr.move_to(x_grid_line as f64 - 2.0, height as f64 - 5.0);
+                cr.move_to(x_grid_line as f64 + 2.0, height as f64 - 5.0);
                 cr.show_text(x_iter.next().unwrap()).unwrap();
             }
 
+            // y-axis (vertical) lines
             let mut first_yaxis_item_hidden = false;
             for y_grid_line in (0..height).step_by(height as usize / 4).rev() {
                 cr.move_to(0.0, y_grid_line as f64);
