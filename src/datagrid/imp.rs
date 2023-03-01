@@ -271,7 +271,7 @@ impl StoxDataGrid {
                 // if we hit None, we are done
                 if let Some(next) = next {
                     cr.line_to(i as f64, *next);
-                    cr.line_to(i as f64, height as f64 - 5.0);
+                    cr.line_to(i as f64, height as f64 - 4.0);
                     cr.stroke().unwrap();
                     cr.line_to(i as f64, *next);
                 }

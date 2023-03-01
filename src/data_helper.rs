@@ -225,9 +225,9 @@ pub fn stox_scale_quotes(quotes: &mut [f64], height: i32) -> Vec<f64> {
     let min = quotes.iter().min_by(|a, b| a.total_cmp(b)).unwrap();
     let mut ret: Vec<f64> = vec![];
     for i in quotes.iter() {
-        let mut x = (i - min) / (max - min) * height as f64;
+        let mut x = (i - min) / (max - min) * ((height as f64) - 5.0);
         if x < 0.0 {
-            // Don't push negative numbers under the graph
+            // Sanity check: Don't push negative numbers under the graph
             x *= -1.0;
         }
         ret.push(x);
