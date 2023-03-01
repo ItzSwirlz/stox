@@ -289,14 +289,21 @@ impl StoxDataGrid {
                 cr.show_text(x_iter.next().unwrap()).unwrap();
             }
 
+            let mut first_yaxis_item_hidden = false;
             for y_grid_line in (0..height).step_by(height as usize / 4).rev() {
                 cr.move_to(0.0, y_grid_line as f64);
                 cr.line_to(width as f64, y_grid_line as f64);
                 cr.stroke().unwrap();
 
                 cr.move_to(2.0, y_grid_line as f64);
-                cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
-                    .unwrap();
+
+                // Don't have the axis text overlap
+                if first_yaxis_item_hidden {
+                    cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
+                        .unwrap();
+                } else {
+                    first_yaxis_item_hidden = true;
+                }
             }
         });
 
