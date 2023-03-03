@@ -190,7 +190,7 @@ impl StoxDataGrid {
                         );
                         set_label_with_max_width(
                             &name_label,
-                            &main_info.short_name,
+                            &main_info.long_name,
                             remaining_width - symbol_label_width,
                         );
 

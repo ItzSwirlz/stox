@@ -134,8 +134,8 @@ impl StoxSidebarItem {
                     quote_label.set_text(&main_info.last_quote);
                     quote_label.set_tooltip_text(Some(&main_info.last_quote));
 
-                    desc_label.set_text(&main_info.short_name);
-                    desc_label.set_tooltip_text(Some(&main_info.short_name));
+                    desc_label.set_text(&main_info.long_name);
+                    desc_label.set_tooltip_text(Some(&main_info.long_name));
 
                     market_change_label.set_text(&extended_info.market_change);
                     market_change_label.set_tooltip_text(Some(&extended_info.market_change));

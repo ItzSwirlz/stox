@@ -8,7 +8,7 @@ use yahoo_finance_api as yahoo;
 
 pub struct MainInfo {
     pub last_quote: String,
-    pub short_name: String,
+    pub long_name: String,
     pub instrument_type: String,
     pub currency: String,
     pub chart: Vec<YQuoteBlock>,
@@ -41,7 +41,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     let last_quote = (last_quote * 100.0).round() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
-    let short_name = &provider.search_ticker(symbol)?.quotes[0].short_name;
+    let long_name = &provider.search_ticker(symbol)?.quotes[0].long_name;
 
     let meta = &latest_quotes.chart.result[0].meta;
     let currency = meta.currency.to_uppercase();
@@ -49,7 +49,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
 
     let mut main_info = MainInfo {
         last_quote: last_quote.to_string(),
-        short_name: short_name.to_string(),
+        long_name: long_name.to_string(),
         instrument_type,
         currency: currency.clone(),
         chart: latest_quotes.chart.result,
