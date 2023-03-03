@@ -43,14 +43,37 @@ fn main() {
     // Create a new application
     let app = Application::builder().application_id(APP_ID).build();
 
+    app.add_main_option(
+        "symbol",
+        glib::Char::from(b's'),
+        glib::OptionFlags::IN_MAIN,
+        glib::OptionArg::String,
+        "The symbol to show on application startup.",
+        None,
+    );
+
+    let default_symbol = Rc::new(RefCell::new(None::<String>));
+
+    app.connect_handle_local_options(
+        clone!(@weak default_symbol => @default-panic, move |_, options| {
+            if let Some(symbol) = options.lookup_value("symbol", None) {
+                *default_symbol.borrow_mut() = Some(symbol.str().unwrap().to_string());
+            }
+
+            -1
+        }),
+    );
+
     // Connect to "activate" signal of `app`
-    app.connect_activate(build_ui);
+    app.connect_activate(clone!(@weak default_symbol => move |app| {
+        build_ui(app, default_symbol.take());
+    }));
 
     // Run the application
     app.run();
 }
 
-fn build_ui(app: &Application) {
+fn build_ui(app: &Application, default_symbol: Option<String>) {
     {
         let windows = app.windows();
         if !windows.is_empty() {
@@ -244,6 +267,17 @@ fn build_ui(app: &Application) {
     b.append(&scroll_window);
 
     let datagrid = RefCell::new(StoxDataGrid::new());
+
+    if let Some(mut default_symbol) = default_symbol {
+        default_symbol = default_symbol.to_uppercase();
+
+        datagrid.borrow().update(
+            default_symbol.clone(),
+            false,
+            (*saved_stocks).borrow().contains(&default_symbol),
+        );
+    }
+
     datagrid
         .borrow()
         .imp()
