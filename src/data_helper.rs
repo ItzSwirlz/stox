@@ -41,7 +41,11 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     let last_quote = (last_quote * 100.0).round() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
-    let long_name = &provider.search_ticker(symbol)?.quotes[0].long_name;
+    let long_name = &if provider.search_ticker(symbol)?.quotes[0].long_name != "" {
+        provider.search_ticker(symbol)?.quotes[0].long_name.clone()
+    } else {
+        provider.search_ticker(symbol)?.quotes[0].short_name.clone()
+    };
 
     let meta = &latest_quotes.chart.result[0].meta;
     let currency = meta.currency.to_uppercase();
