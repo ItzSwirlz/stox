@@ -288,7 +288,12 @@ impl StoxDataGrid {
                 cr.stroke().unwrap();
 
                 cr.move_to(x_grid_line as f64 + 2.0, height as f64 - 5.0);
-                cr.show_text(x_iter.next().unwrap()).unwrap();
+
+                // Some text can crash on Option Instruments, catch any potential bad unwraps
+                let text = x_iter.next();
+                if let Some(text) = text {
+                    cr.show_text(text).unwrap();
+                }
             }
 
             // y-axis (vertical) lines
@@ -302,8 +307,11 @@ impl StoxDataGrid {
 
                 // Don't have the axis text overlap
                 if first_yaxis_item_hidden {
-                    cr.show_text(&format!("{:.2}", y_iter.next().unwrap()))
-                        .unwrap();
+                    // Some text can crash on Option Instruments, catch any potential bad unwraps
+                    let text = y_iter.next();
+                    if let Some(text) = text {
+                        cr.show_text(&format!("{:.2}", text)).unwrap();
+                    }
                 } else {
                     first_yaxis_item_hidden = true;
                 }
