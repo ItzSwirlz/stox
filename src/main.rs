@@ -129,6 +129,10 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
                 color: #dc143c;
             }
 
+            .symbol_bankruptcy {
+                color: #dc143c;
+            }
+
             .symbol_future {
                 color: #2ec27e;
             }

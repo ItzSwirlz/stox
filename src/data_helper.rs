@@ -12,6 +12,7 @@ pub struct MainInfo {
     pub instrument_type: String,
     pub currency: String,
     pub chart: Vec<YQuoteBlock>,
+    pub bankruptcy: bool,
 }
 
 #[derive(Clone)]
@@ -57,6 +58,14 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
         instrument_type,
         currency: currency.clone(),
         chart: latest_quotes.chart.result,
+
+        // Typically, if a company is undergoing bankruptcy they will
+        // add "Q" to the end of their stock symbol in 5-chars length
+        bankruptcy: if symbol.ends_with("Q") && symbol.len() == 5 {
+            true
+        } else {
+            false
+        },
     };
 
     if let Some(currency) = iso::find(&currency) {

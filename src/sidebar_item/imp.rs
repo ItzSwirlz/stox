@@ -146,6 +146,10 @@ impl StoxSidebarItem {
                         market_change_label.set_css_classes(&["market_change_pos"]);
                     }
 
+                    if main_info.bankruptcy && settings.boolean("sidebar-color-bankruptcy") {
+                        symbol_label.add_css_class("symbol_bankruptcy")
+                    }
+
                     if main_info.instrument_type == "FUTURE"
                         && settings.boolean("sidebar-color-futures")
                     {

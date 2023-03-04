@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <schemalist>
     <schema id="org.itzswirlz.stox" path="/org/itzswirlz/Stox/">
+        <key name="sidebar-color-bankruptcy" type="b">
+            <default>true</default>
+            <summary>Color stocks that are undergoing bankruptcy in the sidebar.</summary>
+        </key>
         <key name="sidebar-color-etfs" type="b">
             <default>true</default>
             <summary>Color stocks that are ETFs in the sidebar.</summary>
