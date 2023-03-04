@@ -190,7 +190,15 @@ impl ObjectImpl for StoxDataGrid {
                     return;
                 }
 
-                this.obj().update(symbol, true, this.unsave_btn.borrow().is_visible());
+                let save_btn = this.save_btn.borrow();
+                let unsave_btn = this.unsave_btn.borrow();
+
+                this.obj().update(
+                    symbol,
+                    true,
+                    unsave_btn.is_visible(),
+                    !save_btn.is_sensitive() && !unsave_btn.is_sensitive(),
+                );
             }));
 
             refresh_btn.hide();

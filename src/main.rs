@@ -14,7 +14,7 @@ use sidebar_item::StoxSidebarItem;
 use gettextrs::*;
 
 use glib::subclass::types::ObjectSubclassIsExt;
-use glib::SourceId;
+use glib::{SourceId, VariantTy};
 
 use gtk4::gdk::Display;
 use gtk4::glib::clone;
@@ -48,7 +48,7 @@ fn main() {
         glib::Char::from(b's'),
         glib::OptionFlags::IN_MAIN,
         glib::OptionArg::String,
-        "The symbol to show on application startup.",
+        "The symbol to show on application startup",
         None,
     );
 
@@ -56,7 +56,7 @@ fn main() {
 
     app.connect_handle_local_options(
         clone!(@weak default_symbol => @default-panic, move |_, options| {
-            if let Some(symbol) = options.lookup_value("symbol", None) {
+            if let Some(symbol) = options.lookup_value("symbol", Some(VariantTy::STRING)) {
                 *default_symbol.borrow_mut() = Some(symbol.str().unwrap().to_string());
             }
 
@@ -279,6 +279,7 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
             default_symbol.clone(),
             false,
             (*saved_stocks).borrow().contains(&default_symbol),
+            true,
         );
     }
 
@@ -367,6 +368,7 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
                 symbol.to_string(),
                 false,
                 (*saved_stocks).borrow().contains(&symbol),
+                false,
             ) {
                 if let Some(previous_row) = previous_row.borrow().clone() {
                     sidebar.select_row(Some(&previous_row));

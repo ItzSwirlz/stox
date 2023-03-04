@@ -78,7 +78,13 @@ impl StoxDataGrid {
         obj
     }
 
-    pub fn update(&self, symbol: String, force_update: bool, is_saved: bool) -> bool {
+    pub fn update(
+        &self,
+        symbol: String,
+        force_update: bool,
+        is_saved: bool,
+        is_default: bool,
+    ) -> bool {
         let lock = UPDATE_LOCK.try_lock();
         if lock.is_err() {
             return true;
@@ -163,6 +169,8 @@ impl StoxDataGrid {
         receiver.attach(
             None,
             clone!(@strong self as this, @strong symbol => move |complete_info| {
+                let mut ok = true;
+
                 match complete_info {
                     Some((main_info, extended_info, quotes)) => {
                         latest_quote_label.set_label(&main_info.last_quote);
@@ -202,6 +210,8 @@ impl StoxDataGrid {
                         this.imp().construct_graph(main_info, extended_info, quotes);
                     }
                     None => {
+                        ok = false;
+
                         name_label.set_label("???");
                         latest_quote_label.set_label("???");
                         market_change_label.set_label("???");
@@ -222,8 +232,11 @@ impl StoxDataGrid {
                     }
                 }
 
-                save_btn.set_sensitive(true);
-                unsave_btn.set_sensitive(true);
+                if !is_default || ok {
+                    save_btn.set_sensitive(true);
+                    unsave_btn.set_sensitive(true);
+                }
+
                 refresh_btn.set_sensitive(true);
 
                 drop(lock.replace(None));
