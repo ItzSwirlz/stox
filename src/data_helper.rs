@@ -36,7 +36,7 @@ pub fn stox_search_symbol(symbol: &str) -> Result<Vec<YQuoteItem>, anyhow::Error
 
 pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
     let provider = YahooConnector::new();
-    let latest_quotes = provider.get_latest_quotes(symbol, "1h")?;
+    let latest_quotes = provider.get_latest_quotes(&urlencoding::encode(symbol), "1h")?;
 
     let last_quote = latest_quotes.last_quote()?.close;
     let last_quote = (last_quote * 100.0).round() as i64;
@@ -79,7 +79,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
 pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
     let url = format!(
         "https://query1.finance.yahoo.com/v7/finance/options/{}",
-        symbol
+        urlencoding::encode(symbol)
     );
 
     let data = reqwest::blocking::get(url)?.text()?;
