@@ -4,14 +4,14 @@ use std::cell::RefCell;
 use std::sync::{Arc, Mutex};
 
 use glib::subclass::types::ObjectSubclassIsExt;
-use gtk4::*;
 
 use gtk4::glib::*;
 use gtk4::traits::WidgetExt;
+use gtk4::*;
 
 use lazy_static::lazy_static;
 
-use crate::data_helper::{stox_get_complete_info, stox_get_quotes};
+use crate::data_helper::{stox_get_datagrid_info, stox_get_quotes};
 
 use gettextrs::gettext;
 
@@ -25,6 +25,22 @@ glib::wrapper! {
 
 lazy_static! {
     static ref UPDATE_LOCK: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
+}
+
+macro_rules! imp_clone {
+    ($imp:expr, $($names:ident),* $(,)?) => {
+        $(
+            let $names = $imp.$names.borrow().clone();
+        )*
+    }
+}
+
+macro_rules! set_labels {
+    ($string:literal, $($labels:ident),* $(,)?) => {
+        $(
+            $labels.set_label($string);
+        )*
+    }
 }
 
 macro_rules! pixel_width {
@@ -112,8 +128,8 @@ impl StoxDataGrid {
         let symbol = RefCell::new(symbol);
 
         std::thread::spawn(clone!(
-            @strong symbol => move || match stox_get_complete_info(&symbol.borrow()) {
-                Ok((main_info, extended_info)) => {
+            @strong symbol => move || match stox_get_datagrid_info(&symbol.borrow()) {
+                Ok((main_info, extended_info, stats_info)) => {
                     let quotes = stox_get_quotes(symbol.borrow().to_string(), "1d");
                     if quotes.is_err() {
                         sender.send(None).unwrap();
@@ -121,25 +137,54 @@ impl StoxDataGrid {
                     }
 
                     sender
-                        .send(Some((main_info, extended_info, quotes.unwrap())))
+                        .send(Some((main_info, extended_info, stats_info, quotes.unwrap())))
                         .unwrap()
                 }
                 Err(_) => sender.send(None).unwrap(),
             }
         ));
 
-        let symbol_label = self.imp().symbol_label.borrow().clone();
-        let name_label = self.imp().name_label.borrow().clone();
-        let latest_quote_label = self.imp().latest_quote_label.borrow().clone();
-        let market_change_label = self.imp().market_change_label.borrow().clone();
-        let info_label = self.imp().info_label.borrow().clone();
-        let notebook = self.imp().notebook.borrow().clone();
+        imp_clone!(
+            self.imp(),
+            symbol_label,
+            name_label,
+            latest_quote_label,
+            market_change_label,
+            info_label,
+            notebook,
+            save_btn,
+            unsave_btn,
+            refresh_btn,
+            open_label,
+            high_label,
+            low_label,
+            volume_label,
+            pe_ratio_label,
+            market_cap_label,
+            yield_label,
+            beta_label,
+            eps_label,
+        );
 
-        name_label.set_label("--");
-        latest_quote_label.set_label("--");
-        market_change_label.set_label("--");
+        set_labels!(
+            "--",
+            name_label,
+            latest_quote_label,
+            market_change_label,
+            info_label,
+            open_label,
+            high_label,
+            low_label,
+            volume_label,
+            pe_ratio_label,
+            market_cap_label,
+            yield_label,
+            beta_label,
+            eps_label,
+        );
+
         market_change_label.set_css_classes(&[]);
-        info_label.set_label("--");
+        symbol_label.set_css_classes(&[]);
 
         set_label_with_max_width(
             &symbol_label,
@@ -149,11 +194,6 @@ impl StoxDataGrid {
                 - pixel_width!(latest_quote_label.layout())
                 - pixel_width!(name_label.layout()),
         );
-        symbol_label.set_css_classes(&[]);
-
-        let save_btn = self.imp().save_btn.borrow().clone();
-        let unsave_btn = self.imp().unsave_btn.borrow().clone();
-        let refresh_btn = self.imp().refresh_btn.borrow().clone();
 
         save_btn.set_sensitive(false);
         unsave_btn.set_sensitive(false);
@@ -172,7 +212,7 @@ impl StoxDataGrid {
                 let mut ok = true;
 
                 match complete_info {
-                    Some((main_info, extended_info, quotes)) => {
+                    Some((main_info, extended_info, stats_info, quotes)) => {
                         latest_quote_label.set_label(&main_info.last_quote);
                         market_change_label.set_label(&format!(
                             "{} ({})",
@@ -207,15 +247,37 @@ impl StoxDataGrid {
                             extended_info.exchange_name, main_info.currency
                         ));
 
+                        open_label.set_label(&stats_info.open);
+                        high_label.set_label(&stats_info.high);
+                        low_label.set_label(&stats_info.low);
+                        volume_label.set_label(&stats_info.volume);
+                        pe_ratio_label.set_label(&stats_info.pe_ratio);
+                        market_cap_label.set_label(&stats_info.market_cap);
+                        yield_label.set_label(&stats_info.dividend_yield);
+                        beta_label.set_label(&stats_info.beta);
+                        eps_label.set_label(&stats_info.eps);
+
                         this.imp().construct_graph(main_info, extended_info, quotes);
                     }
                     None => {
                         ok = false;
 
-                        name_label.set_label("???");
-                        latest_quote_label.set_label("???");
-                        market_change_label.set_label("???");
-                        info_label.set_label("???");
+                        set_labels!(
+                            "???",
+                            name_label,
+                            latest_quote_label,
+                            market_change_label,
+                            info_label,
+                            open_label,
+                            high_label,
+                            low_label,
+                            volume_label,
+                            pe_ratio_label,
+                            market_cap_label,
+                            yield_label,
+                            beta_label,
+                            eps_label,
+                        );
 
                         set_label_with_max_width(
                             &symbol_label,

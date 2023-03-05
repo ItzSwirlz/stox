@@ -140,6 +140,25 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
             .symbol_etf {
                 color: #3584e4;
             }
+
+            .stats_col_1 {
+                padding-right: 15px;
+            }
+
+            .stats_col_2 {
+                padding-left: 15px;
+                padding-right: 15px;
+                border-left: 1px solid @borders;
+                border-right: 1px solid @borders;
+            }
+
+            .stats_col_3 {
+                padding-left: 15px;
+            }
+
+            .stat_data_label {
+                font-weight: 350;
+            }
         ",
     );
 

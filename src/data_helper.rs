@@ -1,10 +1,22 @@
 use anyhow::{Context, Result};
+
 use chrono::prelude::*;
+
 use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
-use yahoo::YahooConnector;
-use yahoo::*;
-use yahoo_finance_api as yahoo;
+
+use yahoo_finance_api::YahooConnector;
+use yahoo_finance_api::*;
+
+macro_rules! stat_fmt {
+    ($stat:expr) => {
+        $stat["fmt"]
+            .as_str()
+            .unwrap_or("N/A")
+            .to_string()
+            .to_uppercase()
+    };
+}
 
 pub struct MainInfo {
     pub last_quote: String,
@@ -15,12 +27,23 @@ pub struct MainInfo {
     pub bankruptcy: bool,
 }
 
-#[derive(Clone)]
 pub struct ExtendedInfo {
     pub exchange_name: String,
     pub day_range: String,
     pub market_change: String,
     pub market_change_percent: String,
+}
+
+pub struct StatsInfo {
+    pub open: String,
+    pub high: String,
+    pub low: String,
+    pub volume: String,
+    pub pe_ratio: String,
+    pub market_cap: String,
+    pub dividend_yield: String,
+    pub beta: String,
+    pub eps: String,
 }
 
 impl ExtendedInfo {
@@ -120,8 +143,65 @@ pub fn stox_get_extended_info(symbol: &str) -> Result<ExtendedInfo> {
     })
 }
 
-pub fn stox_get_complete_info(symbol: &str) -> Result<(MainInfo, ExtendedInfo)> {
+pub fn stox_get_stats_info(symbol: &str) -> Result<StatsInfo> {
+    let url = format!(
+        "{}{}{}",
+        "https://query1.finance.yahoo.com/v11/finance/quoteSummary/",
+        urlencoding::encode(symbol),
+        "?modules=defaultKeyStatistics,summaryDetail"
+    );
+
+    let data = reqwest::blocking::get(url)?.text()?;
+    let data: serde_json::Value = serde_json::from_str(&data)?;
+
+    let result = &data["quoteSummary"]["result"][0];
+    let summary_detail = &result["summaryDetail"];
+
+    let open = stat_fmt!(summary_detail["open"]);
+    let high = stat_fmt!(summary_detail["dayHigh"]);
+    let low = stat_fmt!(summary_detail["dayLow"]);
+    let volume = stat_fmt!(summary_detail["volume"]);
+    let pe_ratio = stat_fmt!(summary_detail["trailingPE"]);
+    let market_cap = stat_fmt!(summary_detail["marketCap"]);
+    let dividend_yield = stat_fmt!(summary_detail["dividendYield"]);
+    let beta = stat_fmt!(summary_detail["beta"]);
+    let eps = stat_fmt!(result["defaultKeyStatistics"]["trailingEps"]);
+
+    Ok(StatsInfo {
+        open,
+        high,
+        low,
+        volume,
+        pe_ratio,
+        market_cap,
+        dividend_yield,
+        beta,
+        eps,
+    })
+}
+
+pub fn stox_get_sidebar_info(symbol: &str) -> Result<(MainInfo, ExtendedInfo)> {
     Ok((stox_get_main_info(symbol)?, stox_get_extended_info(symbol)?))
+}
+
+pub fn stox_get_datagrid_info(symbol: &str) -> Result<(MainInfo, ExtendedInfo, StatsInfo)> {
+    Ok((
+        stox_get_main_info(symbol)?,
+        stox_get_extended_info(symbol)?,
+        // The stats are non-critical so if for some reason they fail to load
+        // we can do without them
+        stox_get_stats_info(symbol).unwrap_or(StatsInfo {
+            open: "???".to_owned(),
+            high: "???".to_owned(),
+            low: "???".to_owned(),
+            volume: "???".to_owned(),
+            pe_ratio: "???".to_owned(),
+            market_cap: "???".to_owned(),
+            dividend_yield: "???".to_owned(),
+            beta: "???".to_owned(),
+            eps: "???".to_owned(),
+        }),
+    ))
 }
 
 pub fn stox_get_chart_x_axis(
@@ -193,7 +273,6 @@ pub fn stox_get_chart_x_axis(
     Ok(axis)
 }
 
-// Currently the yahoo finance api crate doesn't have support for getting market day ranges
 pub fn stox_get_chart_y_axis(extended_info: &ExtendedInfo) -> Result<Vec<f64>, anyhow::Error> {
     // We have our range, but we need to make it a vec of points.
     let i = extended_info.day_range.trim();

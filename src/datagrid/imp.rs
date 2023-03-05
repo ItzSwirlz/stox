@@ -23,10 +23,51 @@ pub struct StoxDataGrid {
     pub unsave_btn: RefCell<Button>,
     pub refresh_btn: RefCell<Button>,
     pub notebook: RefCell<Notebook>,
+    pub open_label: RefCell<Label>,
+    pub high_label: RefCell<Label>,
+    pub low_label: RefCell<Label>,
+    pub volume_label: RefCell<Label>,
+    pub pe_ratio_label: RefCell<Label>,
+    pub market_cap_label: RefCell<Label>,
+    pub yield_label: RefCell<Label>,
+    pub beta_label: RefCell<Label>,
+    pub eps_label: RefCell<Label>,
 }
 
 pub const GRID_WIDTH: i32 = 850;
 pub const SYMBOL_LABEL_MARGIN_END: i32 = 10;
+
+macro_rules! stat_col {
+    ($stats_grid:ident, $stat_name:literal, $col:literal, $row:literal) => {{
+        let stat_box = Box::builder()
+            .orientation(Orientation::Horizontal)
+            .css_classes(vec!["stats_col_".to_owned() + &($col + 1).to_string()])
+            .width_request(GRID_WIDTH / 3)
+            .build();
+
+        let stat_name_label = Label::builder()
+            .label($stat_name)
+            .halign(Align::Start)
+            .margin_end(10)
+            .build();
+
+        let stat_data_label = Label::builder()
+            .label("--")
+            .css_classes(vec!["stat_data_label"])
+            .ellipsize(pango::EllipsizeMode::Start)
+            .hexpand(true)
+            .max_width_chars(1)
+            .xalign(1.0)
+            .build();
+
+        stat_box.append(&stat_name_label);
+        stat_box.append(&stat_data_label);
+
+        $stats_grid.attach(&stat_box, $col, $row, 1, 1);
+
+        stat_data_label
+    }};
+}
 
 #[glib::object_subclass]
 impl ObjectSubclass for StoxDataGrid {
@@ -60,7 +101,7 @@ impl ObjectImpl for StoxDataGrid {
             .halign(Align::Center)
             .width_request(GRID_WIDTH)
             .margin_start(10)
-            .margin_end(10)
+            .margin_end(20)
             .margin_top(10)
             .margin_bottom(10)
             .build();
@@ -129,8 +170,26 @@ impl ObjectImpl for StoxDataGrid {
         grid.attach(&quote_box, 2, 0, 1, 1);
         grid.attach(&notebook, 0, 2, 3, 2);
 
-        grid.show();
-        grid.set_parent(&*obj);
+        let stats_grid = Grid::builder()
+            .margin_top(10)
+            .halign(Align::Start)
+            .width_request(GRID_WIDTH)
+            .hexpand(false)
+            .build();
+
+        *self.open_label.borrow_mut() = stat_col!(stats_grid, "Open", 0, 0);
+        *self.high_label.borrow_mut() = stat_col!(stats_grid, "High", 0, 1);
+        *self.low_label.borrow_mut() = stat_col!(stats_grid, "Low", 0, 2);
+
+        *self.volume_label.borrow_mut() = stat_col!(stats_grid, "Volume", 1, 0);
+        *self.pe_ratio_label.borrow_mut() = stat_col!(stats_grid, "P/E Ratio", 1, 1);
+        *self.market_cap_label.borrow_mut() = stat_col!(stats_grid, "Market Cap", 1, 2);
+
+        *self.yield_label.borrow_mut() = stat_col!(stats_grid, "Yield", 2, 0);
+        *self.beta_label.borrow_mut() = stat_col!(stats_grid, "Beta", 2, 1);
+        *self.eps_label.borrow_mut() = stat_col!(stats_grid, "EPS", 2, 2);
+
+        grid.attach(&stats_grid, 0, 6, 3, 3);
 
         let btns_box = Box::builder()
             .spacing(10)
@@ -206,7 +265,10 @@ impl ObjectImpl for StoxDataGrid {
             *self.refresh_btn.borrow_mut() = refresh_btn;
         }
 
-        grid.attach(&btns_box, 0, 4, 3, 1);
+        grid.attach(&btns_box, 0, 9, 3, 1);
+
+        grid.show();
+        grid.set_parent(&*obj);
 
         *self.symbol_label.borrow_mut() = symbol_label;
         *self.name_label.borrow_mut() = name_label;

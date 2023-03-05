@@ -8,7 +8,7 @@ use gtk4::*;
 
 use once_cell::sync::Lazy;
 
-use crate::data_helper::stox_get_complete_info;
+use crate::data_helper::stox_get_sidebar_info;
 
 #[derive(Default, CompositeTemplate)]
 #[template(resource = "/org/itzswirlz/stox/resources/ui/stoxsidebaritem.ui")]
@@ -123,7 +123,7 @@ impl StoxSidebarItem {
 
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        std::thread::spawn(move || match stox_get_complete_info(&symbol) {
+        std::thread::spawn(move || match stox_get_sidebar_info(&symbol) {
             Ok(main_info) => sender.send(Some(main_info)).unwrap(),
             Err(_) => sender.send(None).unwrap(),
         });
