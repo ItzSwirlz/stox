@@ -61,11 +61,7 @@ pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
 
         // Typically, if a company is undergoing bankruptcy they will
         // add "Q" to the end of their stock symbol in 5-chars length
-        bankruptcy: if symbol.ends_with("Q") && symbol.len() == 5 {
-            true
-        } else {
-            false
-        },
+        bankruptcy: symbol.ends_with('Q') && symbol.len() == 5,
     };
 
     if let Some(currency) = iso::find(&currency) {
