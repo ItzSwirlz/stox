@@ -2,6 +2,8 @@
 
 Stox is a WIP application for viewing the stock market with Yahoo Finance.
 
+![Screenshot](https://raw.githubusercontent.com/ItzSwirlz/stox/main/.github/screenshot.png)
+
 ## Building
 
 You will need:
@@ -10,7 +12,7 @@ You will need:
 - Meson and ninja-build
 - Gettext (for translations)
 
-You will also need to build and install so the gresource files can be found during runtime.
+You will also need to build and install so the gresource and schemas files can be found during runtime.
 ```
 meson build
 ninja -C build
