@@ -256,7 +256,7 @@ impl ObjectImpl for StoxDataGrid {
                     symbol,
                     true,
                     unsave_btn.is_visible(),
-                    !save_btn.is_sensitive() && !unsave_btn.is_sensitive(),
+                    !save_btn.is_sensitive(),
                 );
             }));
 

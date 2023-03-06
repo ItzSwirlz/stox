@@ -69,8 +69,8 @@ impl ObjectImpl for StoxSidebarItem {
         }
     }
 
-    fn property(&self, _id: usize, _pspec: &ParamSpec) -> Value {
-        match _pspec.name() {
+    fn property(&self, _id: usize, pspec: &ParamSpec) -> Value {
+        match pspec.name() {
             "symbol" => self.symbol.borrow().to_string().to_value(),
             "searched" => self.searched.borrow().to_value(),
             _ => unimplemented!(),
@@ -147,7 +147,7 @@ impl StoxSidebarItem {
                     }
 
                     if main_info.bankruptcy && settings.boolean("sidebar-color-bankruptcy") {
-                        symbol_label.add_css_class("symbol_bankruptcy")
+                        symbol_label.add_css_class("symbol_bankruptcy");
                     }
 
                     if main_info.instrument_type == "FUTURE"

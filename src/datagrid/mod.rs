@@ -294,11 +294,8 @@ impl StoxDataGrid {
                     }
                 }
 
-                if !is_default || ok {
-                    save_btn.set_sensitive(true);
-                    unsave_btn.set_sensitive(true);
-                }
-
+                save_btn.set_sensitive(!is_default || ok);
+                unsave_btn.set_sensitive(true);
                 refresh_btn.set_sensitive(true);
 
                 drop(lock.replace(None));
