@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-16 07:28-0500\n"
+"POT-Creation-Date: 2023-03-06 11:21-0500\n"
 "PO-Revision-Date: 2023-02-21 21:00-0500\n"
 "Last-Translator: Samuel Ryklin <samuelryklin@protonmail.com>\n"
 "Language-Team: Russian\n"
@@ -16,23 +16,59 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: src/datagrid/imp.rs:150
+#: src/datagrid/imp.rs:181
+msgid "Open"
+msgstr ""
+
+#: src/datagrid/imp.rs:182
+msgid "High"
+msgstr ""
+
+#: src/datagrid/imp.rs:183
+msgid "Low"
+msgstr ""
+
+#: src/datagrid/imp.rs:185
+msgid "Volume"
+msgstr ""
+
+#: src/datagrid/imp.rs:186
+msgid "P/E Ratio"
+msgstr ""
+
+#: src/datagrid/imp.rs:187
+msgid "Market Cap"
+msgstr ""
+
+#: src/datagrid/imp.rs:189
+msgid "Yield"
+msgstr ""
+
+#: src/datagrid/imp.rs:190
+msgid "Beta"
+msgstr ""
+
+#: src/datagrid/imp.rs:191
+msgid "EPS"
+msgstr ""
+
+#: src/datagrid/imp.rs:207
 msgid "Save"
 msgstr "Сохранять"
 
-#: src/datagrid/imp.rs:167
+#: src/datagrid/imp.rs:224
 msgid "Unsave"
 msgstr "Удалить"
 
-#: src/datagrid/imp.rs:184
+#: src/datagrid/imp.rs:241
 msgid "Refresh"
 msgstr "Перезагрузить"
 
-#: src/datagrid/mod.rs:130
+#: src/datagrid/mod.rs:291
 msgid "The graph could not be loaded."
 msgstr "График не загружается."
 
-#: src/datagrid/mod.rs:131 src/dialogs.rs:9
+#: src/datagrid/mod.rs:292 src/dialogs.rs:9
 msgid "Error"
 msgstr "Ошибка"
 
@@ -42,25 +78,34 @@ msgid ""
 "\n"
 "To prevent data loss, saving and unsaving stocks will be disabled until this "
 "is fixed."
-msgstr "Сохраненные запасы не удалось загрузить. Попробуйте перезапустить программу. Чтобы предотвратить потерю данных, сохранение и удаление сохранений будут отключены до тех пор, пока это не будет исправлено."
+msgstr ""
+"Сохраненные запасы не удалось загрузить. Попробуйте перезапустить программу. "
+"Чтобы предотвратить потерю данных, сохранение и удаление сохранений будут "
+"отключены до тех пор, пока это не будет исправлено."
 
 #: src/dialogs.rs:29
 msgid ""
 "Saving and unsaving stocks is disabled to prevent data loss. Try restarting "
 "the app."
-msgstr "Сохранение и несохранение запасов отключено, чтобы предотвратить потерю данных. Попробуйте перезапустить программу."
+msgstr ""
+"Сохранение и несохранение запасов отключено, чтобы предотвратить потерю "
+"данных. Попробуйте перезапустить программу."
 
 #: src/dialogs.rs:37
 msgid ""
 "An error occurred and the stock could not be saved. Try saving it again."
-msgstr "Произошла ошибка, и фонд не удалось восстановить. Попробуйте сохранить еще раз."
+msgstr ""
+"Произошла ошибка, и фонд не удалось восстановить. Попробуйте сохранить еще "
+"раз."
 
 #: src/dialogs.rs:44
 msgid ""
-
 "An error occurred and the stock could not be unsaved. Try unsaving it again."
-msgstr "Произошла ошибка, и фонд не удалось восстановить. Попробуйте удалить сохранение еще раз."
+msgstr ""
+"Произошла ошибка, и фонд не удалось восстановить. Попробуйте удалить "
+"сохранение еще раз."
 
-#: src/main.rs:113
-msgid "Search for a symbol…"
+#: src/main.rs:182
+#, fuzzy
+msgid "Search for a symbol\\u{2026}"
 msgstr "Найдите биржевой тикер…"

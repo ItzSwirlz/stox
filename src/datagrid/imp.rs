@@ -7,6 +7,7 @@ use gtk4::subclass::prelude::*;
 use gtk4::*;
 
 use crate::data_helper::*;
+use gettextrs::*;
 
 use once_cell::sync::Lazy;
 
@@ -38,7 +39,7 @@ pub const GRID_WIDTH: i32 = 850;
 pub const SYMBOL_LABEL_MARGIN_END: i32 = 10;
 
 macro_rules! stat_col {
-    ($stats_grid:ident, $stat_name:literal, $col:literal, $row:literal) => {{
+    ($stats_grid:ident, $stat_name:expr, $col:literal, $row:literal) => {{
         let stat_box = Box::builder()
             .orientation(Orientation::Horizontal)
             .css_classes(vec!["stats_col_".to_owned() + &($col + 1).to_string()])
@@ -177,17 +178,17 @@ impl ObjectImpl for StoxDataGrid {
             .hexpand(false)
             .build();
 
-        *self.open_label.borrow_mut() = stat_col!(stats_grid, "Open", 0, 0);
-        *self.high_label.borrow_mut() = stat_col!(stats_grid, "High", 0, 1);
-        *self.low_label.borrow_mut() = stat_col!(stats_grid, "Low", 0, 2);
+        *self.open_label.borrow_mut() = stat_col!(stats_grid, gettext("Open"), 0, 0);
+        *self.high_label.borrow_mut() = stat_col!(stats_grid, gettext("High"), 0, 1);
+        *self.low_label.borrow_mut() = stat_col!(stats_grid, gettext("Low"), 0, 2);
 
-        *self.volume_label.borrow_mut() = stat_col!(stats_grid, "Volume", 1, 0);
-        *self.pe_ratio_label.borrow_mut() = stat_col!(stats_grid, "P/E Ratio", 1, 1);
-        *self.market_cap_label.borrow_mut() = stat_col!(stats_grid, "Market Cap", 1, 2);
+        *self.volume_label.borrow_mut() = stat_col!(stats_grid, gettext("Volume"), 1, 0);
+        *self.pe_ratio_label.borrow_mut() = stat_col!(stats_grid, gettext("P/E Ratio"), 1, 1);
+        *self.market_cap_label.borrow_mut() = stat_col!(stats_grid, gettext("Market Cap"), 1, 2);
 
-        *self.yield_label.borrow_mut() = stat_col!(stats_grid, "Yield", 2, 0);
-        *self.beta_label.borrow_mut() = stat_col!(stats_grid, "Beta", 2, 1);
-        *self.eps_label.borrow_mut() = stat_col!(stats_grid, "EPS", 2, 2);
+        *self.yield_label.borrow_mut() = stat_col!(stats_grid, gettext("Yield"), 2, 0);
+        *self.beta_label.borrow_mut() = stat_col!(stats_grid, gettext("Beta"), 2, 1);
+        *self.eps_label.borrow_mut() = stat_col!(stats_grid, gettext("EPS"), 2, 2);
 
         grid.attach(&stats_grid, 0, 6, 3, 3);
 
