@@ -7,7 +7,6 @@ use gtk4::subclass::prelude::*;
 use gtk4::*;
 
 use crate::data_helper::*;
-use gettextrs::*;
 
 use once_cell::sync::Lazy;
 
