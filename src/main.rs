@@ -304,6 +304,7 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
     let scroll_window = ScrolledWindow::builder()
         .child(&viewport)
         .halign(Align::Center)
+        .hscrollbar_policy(PolicyType::Never)
         .focusable(true)
         .min_content_width(325)
         .max_content_width(325)
