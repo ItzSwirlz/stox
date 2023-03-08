@@ -18,39 +18,39 @@ msgstr ""
 
 #: src/datagrid/imp.rs:181
 msgid "Open"
-msgstr ""
+msgstr "Открыто"
 
 #: src/datagrid/imp.rs:182
 msgid "High"
-msgstr ""
+msgstr "Высокий"
 
 #: src/datagrid/imp.rs:183
 msgid "Low"
-msgstr ""
+msgstr "Низкий"
 
 #: src/datagrid/imp.rs:185
 msgid "Volume"
-msgstr ""
+msgstr "Объем"
 
 #: src/datagrid/imp.rs:186
 msgid "P/E Ratio"
-msgstr ""
+msgstr "Ц/П"
 
 #: src/datagrid/imp.rs:187
 msgid "Market Cap"
-msgstr ""
+msgstr "Рыночная Капитализация"
 
 #: src/datagrid/imp.rs:189
 msgid "Yield"
-msgstr ""
+msgstr "Доход"
 
 #: src/datagrid/imp.rs:190
 msgid "Beta"
-msgstr ""
+msgstr "Бета"
 
 #: src/datagrid/imp.rs:191
 msgid "EPS"
-msgstr ""
+msgstr "ПНА"
 
 #: src/datagrid/imp.rs:207
 msgid "Save"
