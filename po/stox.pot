@@ -98,5 +98,5 @@ msgid ""
 msgstr ""
 
 #: src/main.rs:182
-msgid "Search for a symbol\\u{2026}"
+msgid "Search for a symbol…"
 msgstr ""

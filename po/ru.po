@@ -106,6 +106,5 @@ msgstr ""
 "сохранение еще раз."
 
 #: src/main.rs:182
-#, fuzzy
-msgid "Search for a symbol\\u{2026}"
+msgid "Search for a symbol…"
 msgstr "Найдите биржевой тикер…"
