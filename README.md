@@ -17,6 +17,7 @@ You will also need to build and install so the gresource and schemas files can b
 meson build
 ninja -C build
 sudo ninja -C build install
+sudo glib-compile-schemas /usr/local/share/glib-2.0/ (or whatever your schemadir is)
 ```
 
 ## Contributing
