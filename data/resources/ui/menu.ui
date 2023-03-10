@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<interface>
+    <menu id='app-menu'>
+        <section>
+            <item>
+                <attribute name='label' translatable='yes'>About Stox</attribute>
+                <attribute name='action'>app.about</attribute>
+            </item>
+        </section>
+    </menu>
+</interface>
