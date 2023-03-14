@@ -8,6 +8,9 @@ use rusty_money::{iso, Money};
 use yahoo_finance_api::YahooConnector;
 use yahoo_finance_api::*;
 
+static PROVIDER: once_cell::sync::Lazy<YahooConnector> =
+    once_cell::sync::Lazy::new(|| YahooConnector::new());
+
 macro_rules! stat_fmt {
     ($stat:expr) => {
         $stat["fmt"]
@@ -53,19 +56,17 @@ impl ExtendedInfo {
 }
 
 pub fn stox_search_symbol(symbol: &str) -> Result<Vec<YQuoteItem>, anyhow::Error> {
-    let provider = YahooConnector::new();
-    Ok(provider.search_ticker(&urlencoding::encode(symbol))?.quotes)
+    Ok(PROVIDER.search_ticker(&urlencoding::encode(symbol))?.quotes)
 }
 
 pub fn stox_get_main_info(symbol: &str) -> Result<MainInfo> {
-    let provider = YahooConnector::new();
-    let latest_quotes = provider.get_latest_quotes(&urlencoding::encode(symbol), "1h")?;
+    let latest_quotes = PROVIDER.get_latest_quotes(&urlencoding::encode(symbol), "1h")?;
 
     let last_quote = latest_quotes.last_quote()?.close;
     let last_quote = (last_quote * 100.0).round() as i64;
     let last_quote = Decimal::new(last_quote, 2); // limit to two decimal places
 
-    let quote_item = &provider.search_ticker(symbol)?.quotes[0];
+    let quote_item = &PROVIDER.search_ticker(symbol)?.quotes[0];
     let mut name = &quote_item.long_name;
     if name.is_empty() {
         name = &quote_item.short_name;
@@ -292,8 +293,7 @@ pub fn stox_get_chart_y_axis(extended_info: &ExtendedInfo) -> Result<Vec<f64>, a
 }
 
 pub fn stox_get_quotes(symbol: String, range: &str) -> Result<Vec<f64>, anyhow::Error> {
-    let provider = YahooConnector::new();
-    let response = provider.get_quote_range(&symbol, "1m", range)?;
+    let response = PROVIDER.get_quote_range(&symbol, "1m", range)?;
 
     let mut axis: Vec<f64> = vec![];
 
