@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: stox\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-06 11:21-0500\n"
+"POT-Creation-Date: 2023-03-14 12:27-0400\n"
 "PO-Revision-Date: 2023-02-24 12:44-0500\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -18,51 +18,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: src/datagrid/imp.rs:181
+#: src/datagrid/imp.rs:180
 msgid "Open"
 msgstr ""
 
-#: src/datagrid/imp.rs:182
+#: src/datagrid/imp.rs:181
 msgid "High"
 msgstr ""
 
-#: src/datagrid/imp.rs:183
+#: src/datagrid/imp.rs:182
 msgid "Low"
 msgstr ""
 
-#: src/datagrid/imp.rs:185
+#: src/datagrid/imp.rs:184
 msgid "Volume"
 msgstr ""
 
-#: src/datagrid/imp.rs:186
+#: src/datagrid/imp.rs:185
 msgid "P/E Ratio"
 msgstr ""
 
-#: src/datagrid/imp.rs:187
+#: src/datagrid/imp.rs:186
 msgid "Market Cap"
 msgstr ""
 
-#: src/datagrid/imp.rs:189
+#: src/datagrid/imp.rs:188
 msgid "Yield"
 msgstr ""
 
-#: src/datagrid/imp.rs:190
+#: src/datagrid/imp.rs:189
 msgid "Beta"
 msgstr ""
 
-#: src/datagrid/imp.rs:191
+#: src/datagrid/imp.rs:190
 msgid "EPS"
 msgstr ""
 
-#: src/datagrid/imp.rs:207
+#: src/datagrid/imp.rs:206
 msgid "Save"
 msgstr "Guardar"
 
-#: src/datagrid/imp.rs:224
+#: src/datagrid/imp.rs:223
 msgid "Unsave"
 msgstr ""
 
-#: src/datagrid/imp.rs:241
+#: src/datagrid/imp.rs:240
 msgid "Refresh"
 msgstr "Actualizar"
 
@@ -73,6 +73,10 @@ msgstr ""
 #: src/datagrid/mod.rs:292 src/dialogs.rs:9
 msgid "Error"
 msgstr "Error"
+
+#: src/sidebar_item/imp.rs:150
+msgid "This company may be undergoing bankruptcy."
+msgstr ""
 
 #: src/dialogs.rs:20
 msgid ""
@@ -99,5 +103,5 @@ msgid ""
 msgstr ""
 
 #: src/main.rs:182
-msgid "Search for a symbol…"
+msgid "Search for a symbol..."
 msgstr ""

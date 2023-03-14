@@ -1,5 +1,7 @@
 use std::cell::RefCell;
 
+use gettextrs::gettext;
+
 use gtk4::glib::subclass::types::ObjectSubclass;
 use gtk4::glib::*;
 use gtk4::prelude::*;
@@ -144,6 +146,9 @@ impl StoxSidebarItem {
 
                     if main_info.bankruptcy && settings.boolean("sidebar-color-bankruptcy") {
                         symbol_label.add_css_class("symbol_bankruptcy");
+                        symbol_label.set_tooltip_text(Some(&gettext(
+                            "This company may be undergoing bankruptcy.",
+                        )));
                     }
 
                     if main_info.instrument_type == "FUTURE"

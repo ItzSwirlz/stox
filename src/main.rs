@@ -179,7 +179,7 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
 
     let searchbar = SearchEntry::builder()
         .focusable(true)
-        .placeholder_text(&gettext("Search for a symbol\u{2026}"))
+        .placeholder_text(&gettext("Search for a symbol..."))
         .build();
     searchbar.show();
 
