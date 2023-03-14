@@ -15,4 +15,9 @@ impl StoxSidebarItem {
             .property("searched", &searched)
             .build()
     }
+
+    pub fn tick(item: imp::StoxSidebarItem) {
+        // fancy hack for making the function use the implementation
+        imp::StoxSidebarItem::tick(&item);
+    }
 }

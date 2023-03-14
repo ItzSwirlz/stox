@@ -91,13 +91,7 @@ impl ObjectImpl for StoxSidebarItem {
             .get()
             .set_tooltip_text(Some(&self.symbol.borrow()));
 
-        self.start_ticking(
-            self.symbol.borrow().to_string(),
-            self.desc_label.get(),
-            self.quote_label.get(),
-            self.symbol_label.get(),
-            self.market_change_label.get(),
-        );
+        self.tick();
     }
 }
 
@@ -108,14 +102,13 @@ impl ListBoxRowImpl for StoxSidebarItem {}
 impl WidgetImpl for StoxSidebarItem {}
 
 impl StoxSidebarItem {
-    pub fn start_ticking(
-        &self,
-        symbol: String,
-        desc_label: Label,
-        quote_label: Label,
-        symbol_label: Label,
-        market_change_label: Label,
-    ) {
+    pub fn tick(&self) {
+        let symbol = self.symbol.borrow().to_string();
+        let desc_label = self.desc_label.get();
+        let quote_label = self.quote_label.get();
+        let symbol_label = self.symbol_label.get();
+        let market_change_label = self.market_change_label.get();
+
         let settings = gio::Settings::new(crate::APP_ID);
         if symbol.is_empty() {
             return;
