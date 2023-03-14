@@ -116,9 +116,12 @@ impl StoxSidebarItem {
 
         let (sender, receiver) = MainContext::channel(PRIORITY_DEFAULT);
 
-        std::thread::spawn(move || match stox_get_sidebar_info(&symbol) {
-            Ok(main_info) => sender.send(Some(main_info)).unwrap(),
-            Err(_) => sender.send(None).unwrap(),
+        std::thread::spawn(move || loop {
+            match stox_get_sidebar_info(&symbol) {
+                Ok(main_info) => sender.send(Some(main_info)).unwrap(),
+                Err(_) => sender.send(None).unwrap(),
+            }
+            std::thread::sleep(std::time::Duration::from_secs(5));
         });
 
         receiver.attach(None, move |complete_info| {
