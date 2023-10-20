@@ -198,16 +198,39 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
     let sidebar = ListBox::new();
     sidebar.set_height_request(800);
     sidebar.append(&searchbar_row);
-    if sidebar_show_separators {
-        sidebar.set_show_separators(true);
-    }
 
     let sidebar_symbols: Arc<Mutex<Vec<StoxSidebarItem>>> = Arc::new(Mutex::new(Vec::new()));
     for symbol in &*saved_stocks.borrow() {
         let sidebar_item = StoxSidebarItem::new(symbol, false);
-        sidebar_item.show();
-        sidebar.append(&sidebar_item);
         sidebar_symbols.lock().unwrap().push(sidebar_item);
+    }
+
+    let model = gio::ListStore::new(StoxSidebarItem::static_type());
+    model.extend_from_slice(&sidebar_symbols.lock().unwrap());
+
+    let factory = SignalListItemFactory::new();
+    factory.connect_setup(move |_, list_item| {
+        list_item
+            .downcast_ref::<ListItem>()
+            .expect("Needs to be ListItem");
+    });
+
+    factory.connect_bind(move |_, list_item| {
+        let sidebar_item = list_item
+            .downcast_ref::<ListItem>()
+            .expect("Needs to be ListItem")
+            .item()
+            .and_downcast::<StoxSidebarItem>()
+            .expect("The item has to be a StoxSidebarItem.");
+        list_item.set_child(Some(&sidebar_item));
+    });
+
+    let selection_model = SingleSelection::new(Some(model));
+    let list_view = ListView::new(Some(selection_model), Some(factory));
+    sidebar.append(&list_view);
+
+    if sidebar_show_separators {
+        list_view.set_show_separators(true);
     }
 
     let (debounce_sender, debounce_receiver) = glib::MainContext::channel(glib::PRIORITY_DEFAULT);
@@ -281,6 +304,7 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
     let scroll_window = ScrolledWindow::builder()
         .child(&viewport)
         .halign(Align::Center)
+        .hscrollbar_policy(PolicyType::Never)
         .focusable(true)
         .min_content_width(325)
         .max_content_width(325)
