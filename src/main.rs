@@ -162,7 +162,7 @@ fn build_ui(app: &Application, default_symbol: Option<String>) {
         ",
     );
 
-    StyleContext::add_provider_for_display(
+    style_context_add_provider_for_display(
         &Display::default().unwrap(),
         &css_provider,
         STYLE_PROVIDER_PRIORITY_APPLICATION,
